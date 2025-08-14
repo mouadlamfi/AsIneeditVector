@@ -40,7 +40,7 @@ const initialLayer: Layer = {
   points: [],
   strokeWidth: 1,
   pointRadius: 3,
-  color: '#000000',
+  color: '#FFFFFF', // Default to white
 };
 
 export function DesignProvider({ children }: { children: React.ReactNode }) {

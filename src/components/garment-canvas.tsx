@@ -139,6 +139,7 @@ export function GarmentCanvas() {
   const [canvasMode, setCanvasMode] = useState<CanvasMode>('draw');
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState<{ x: number, y: number } | null>(null);
+  const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
   
   const [transformMode, setTransformMode] = useState<TransformMode>(null);
@@ -410,13 +411,30 @@ export function GarmentCanvas() {
   }
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!activeLayer || activeLayer.isLocked) return;
     if (transformMode) return;
     if (draggingPointIndex !== null) return;
-    if (canvasMode !== 'draw') return;
 
-    if (e.detail === 1) { // Single click
-      addPoint(getRelativeCoords(e));
+    if (canvasMode === 'pan') {
+      // Click to navigate - center the view on clicked point
+      const coords = getRelativeCoords(e);
+      const canvasWidth = canvasSize.width;
+      const canvasHeight = canvasSize.height;
+
+      // Calculate new offset to center the clicked point
+      const newOffsetX = canvasWidth / 2 - coords.x * scale;
+      const newOffsetY = canvasHeight / 2 - coords.y * scale;
+
+      setCanvasOffset({ x: newOffsetX, y: newOffsetY });
+      return;
+    }
+
+    if (canvasMode === 'draw') {
+      if (!activeLayer || activeLayer.isLocked) return;
+
+      if (e.detail === 1) { // Single click
+        const coords = getRelativeCoords(e);
+        addPoint(coords);
+      }
     }
   };
 
@@ -437,6 +455,87 @@ export function GarmentCanvas() {
       removeLastPoint();
     }
     setMeasurement(null);
+  };
+
+  // Touch event handlers for iPad support
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (transformMode) return;
+    if (draggingPointIndex !== null) return;
+
+    const touch = e.touches[0];
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const clientX = touch.clientX;
+    const clientY = touch.clientY;
+
+    // Handle pinch-to-zoom
+    if (e.touches.length === 2) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) +
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      
+      // Store initial distance for zoom calculation
+      setInitialPinchDistance(distance);
+      return;
+    }
+
+    if (canvasMode === 'pan') {
+      setIsPanning(true);
+      setPanStart({ x: clientX, y: clientY });
+    } else if (canvasMode === 'draw') {
+      if (!activeLayer || activeLayer.isLocked) return;
+      
+      const coords = getRelativeCoords({ clientX, clientY });
+      addPoint(coords);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
+
+    // Handle pinch-to-zoom
+    if (e.touches.length === 2 && initialPinchDistance !== null) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const currentDistance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) +
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      
+      const scaleFactor = currentDistance / initialPinchDistance;
+      const newScale = Math.max(0.1, Math.min(scale * scaleFactor, 5));
+      
+      if (newScale !== scale) {
+        setScale(newScale);
+        setInitialPinchDistance(currentDistance);
+      }
+      return;
+    }
+
+    // Handle panning
+    if (!isPanning || !panStart) return;
+
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - panStart.x;
+    const deltaY = touch.clientY - panStart.y;
+    
+    setCanvasOffset(prev => ({
+      x: prev.x + deltaX,
+      y: prev.y + deltaY
+    }));
+    setPanStart({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsPanning(false);
+    setPanStart(null);
+    setInitialPinchDistance(null);
   };
 
   const getMirroredX = useCallback((x: number) => {
@@ -735,13 +834,16 @@ export function GarmentCanvas() {
       onContextMenu={handleContextMenu}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseLeave}
-      className={cn(
-        "w-full h-full relative overflow-hidden group canvas-enhanced",
-        !transformMode && canvasMode === 'draw' && "custom-cursor-thin",
-        canvasMode === 'pan' && "cursor-grab",
-        isPanning && "cursor-grabbing"
-       )}
+              onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className={cn(
+          "w-full h-full relative overflow-hidden group canvas-enhanced",
+          !transformMode && canvasMode === 'draw' && "custom-cursor-crosshair",
+          canvasMode === 'pan' && "cursor-grab",
+          isPanning && "cursor-grabbing"
+         )}
       style={{
         ...gridStyle,
         backgroundColor: '#000000' // Black background for Flower of Life
