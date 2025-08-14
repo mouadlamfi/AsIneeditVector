@@ -2,10 +2,7 @@
 "use client";
 
 import { DesignProvider } from '@/context/design-context';
-import { GarmentCanvas } from '@/components/garment-canvas';
 import { PenTool, Download, Settings, HelpCircle, Zap, Layers, Palette, Ruler } from 'lucide-react';
-import { DrawingToolbar } from '@/components/drawing-toolbar';
-import { LayersPanel } from '@/components/layers-panel';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,27 +14,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import { useState, useRef } from 'react';
+import { useState, useRef, Suspense } from 'react';
 import { useDesign } from '@/context/design-context';
 import type { Point } from '@/lib/types';
+import { DynamicGarmentCanvas, DynamicLayersPanel, DynamicDrawingToolbar } from '@/lib/dynamic-imports';
 
-function addWatermark(container: HTMLElement) {
-  const watermark = document.createElement('div');
-  watermark.innerText = 'by AsIneedit.com';
-  watermark.style.position = 'absolute';
-  watermark.style.bottom = '10px';
-  watermark.style.right = '10px';
-  watermark.style.color = 'rgba(0, 0, 0, 0.5)';
-  watermark.style.fontSize = '12px';
-  watermark.style.pointerEvents = 'none';
-  watermark.id = 'watermark';
-  container.appendChild(watermark);
-  return watermark;
-}
-
-function ExportMenu() {
+// Lazy load the export functionality
+const ExportMenu = () => {
   const [isExporting, setIsExporting] = useState(false);
   const { layers, scale, gridUnit, getCanvasAsSvg, measurement } = useDesign();
 
@@ -416,7 +399,8 @@ function ExportMenu() {
 
           try {
             // Capture the clean export container
-            const canvas = await html2canvas(exportContainer, {
+            const html2canvas = await import('html2canvas');
+            const canvas = await html2canvas.default(exportContainer, {
               backgroundColor: '#1a1a1a',
               logging: false,
               useCORS: true,
@@ -456,7 +440,8 @@ function ExportMenu() {
                 pdfWidth = 210 * imgAspectRatio;
               }
               
-              const pdf = new jsPDF({
+              const jsPDF = await import('jspdf');
+              const pdf = new jsPDF.default({
                 orientation: imgAspectRatio > 1 ? 'landscape' : 'portrait',
                 unit: 'mm',
                 format: 'a4'
@@ -615,7 +600,7 @@ export default function Home() {
                     <Palette className="h-4 w-4 text-primary" />
                     <h2 className="text-sm font-semibold text-foreground">Drawing Tools</h2>
                   </div>
-                  <DrawingToolbar />
+                  <DynamicDrawingToolbar />
                 </div>
                 
                 <Separator />
@@ -626,14 +611,14 @@ export default function Home() {
                     <Layers className="h-4 w-4 text-primary" />
                     <h2 className="text-sm font-semibold text-foreground">Layers</h2>
                   </div>
-                  <LayersPanel />
+                  <DynamicLayersPanel />
                 </div>
               </div>
             </aside>
 
             {/* Enhanced Main Canvas Area */}
             <main className="flex-1 overflow-auto canvas-enhanced">
-              <GarmentCanvas />
+              <DynamicGarmentCanvas />
             </main>
           </div>
         </div>
