@@ -17,8 +17,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+// Lazily load heavy export libraries only when they are actually needed (keeps the first load fast)
+const loadExportLibs = async () => {
+  const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+    import(/* webpackChunkName: "html2canvas" */ 'html2canvas'),
+    import(/* webpackChunkName: "jspdf" */ 'jspdf'),
+  ]);
+  return { html2canvas, jsPDF } as const;
+};
 import { useState, useRef } from 'react';
 import { useDesign } from '@/context/design-context';
 import type { Point } from '@/lib/types';
@@ -234,6 +240,8 @@ function ExportMenu() {
         }
       } else {
         // For PNG and PDF, capture the actual canvas area with measurements
+        // Dynamically import heavy libraries on-demand so they aren't part of the main bundle
+        const { html2canvas, jsPDF } = await loadExportLibs();
         const canvasContainer = document.querySelector('#canvas-container') as HTMLElement;
         const svgElement = document.querySelector('#design-canvas-svg') as SVGSVGElement;
         
