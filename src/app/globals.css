@@ -95,6 +95,50 @@ body {
   }
 }
 
+/* Flower of Life Grid Styles */
+.flower-of-life-grid {
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.1));
+}
+
+.flower-of-life-circle {
+  transition: opacity 0.3s ease;
+}
+
+.flower-of-life-circle:hover {
+  opacity: 0.5 !important;
+}
+
+.flower-of-life-glow {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+  animation: pulse 2s ease-in-out infinite alternate;
+}
+
+.flower-of-life-point {
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1));
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+.guide-lines line {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.6;
+  }
+}
+
 /* High DPI display optimizations */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   .svg-renderer {
