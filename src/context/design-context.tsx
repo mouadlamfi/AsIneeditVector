@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Point, Layer, Measurement, GridUnit } from '@/lib/types';
+import type { Point, Layer, Measurement, GridUnit, GridType, GridConfig } from '@/lib/types';
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,7 +12,11 @@ interface DesignContextState {
   isSymmetryEnabled: boolean;
   measurement: Measurement | null;
   gridUnit: GridUnit;
+  gridType: GridType;
+  gridConfig: GridConfig;
   setGridUnit: (unit: GridUnit) => void;
+  setGridType: (type: GridType) => void;
+  setGridConfig: (config: Partial<GridConfig>) => void;
   setMeasurement: (measurement: Measurement | null) => void;
   toggleSymmetry: () => void;
   addLayer: (existingLayer?: Layer) => void;
@@ -43,6 +47,16 @@ const initialLayer: Layer = {
   color: '#000000',
 };
 
+const initialGridConfig: GridConfig = {
+  type: 'standard',
+  unit: 'inch',
+  scale: 1,
+  opacity: 0.3,
+  showGuides: true,
+  snapToGrid: true,
+  snapThreshold: 10,
+};
+
 export function DesignProvider({ children }: { children: React.ReactNode }) {
   const [layers, setLayers] = useState<Layer[]>([initialLayer]);
   const [activeLayerId, setActiveLayerId] = useState<string | null>(initialLayer.id);
@@ -50,6 +64,8 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
   const [isSymmetryEnabled, setIsSymmetryEnabled] = useState(true);
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const [gridUnit, setGridUnit] = useState<GridUnit>('inch');
+  const [gridType, setGridType] = useState<GridType>('standard');
+  const [gridConfig, setGridConfig] = useState<GridConfig>(initialGridConfig);
 
   const toggleSymmetry = useCallback(() => setIsSymmetryEnabled(prev => !prev), []);
   const zoomIn = useCallback(() => setScale(s => Math.min(s + 0.1, 5)), []);
@@ -177,98 +193,69 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
     setMeasurement(null);
   }, [activeLayerId, layers]);
 
-  const updatePoint = useCallback((index: number, newPosition: Partial<Point>) => {
+  const updatePoint = useCallback((index: number, point: Partial<Point>) => {
     if (!activeLayerId) return;
     const activeLayer = layers.find(l => l.id === activeLayerId);
     if (activeLayer?.isLocked) return;
-    updateLayerPoints(activeLayerId, (points) =>
-      points.map((p, i) => (i === index ? { ...p, ...newPosition } : p))
+    updateLayerPoints(activeLayerId, (points) => 
+      points.map((p, i) => i === index ? { ...p, ...point } : p)
     );
   }, [activeLayerId, layers]);
-  
+
   const updateLayerBackgroundImage = useCallback((layerId: string, image: string | undefined, width: number, height: number) => {
-    const canvas = document.getElementById('canvas-container');
-    const canvasWidth = canvas?.clientWidth || 500;
-    const canvasHeight = canvas?.clientHeight || 500;
-    
-    const aspectRatio = width / height;
-    let newWidth = canvasWidth * 0.5;
-    let newHeight = newWidth / aspectRatio;
-
-    if (newHeight > canvasHeight * 0.8) {
-        newHeight = canvasHeight * 0.8;
-        newWidth = newHeight * aspectRatio;
-    }
-
-    updateLayer(layerId, { 
-        backgroundImage: image,
-        imageWidth: newWidth,
-        imageHeight: newHeight,
-        imageX: canvasWidth / 2,
-        imageY: canvasHeight / 2,
-        imageRotation: 0,
+    updateLayer(layerId, {
+      backgroundImage: image,
+      imageWidth: width,
+      imageHeight: height,
+      imageX: 0,
+      imageY: 0,
+      imageRotation: 0,
     });
   }, []);
 
   const resetImageTransform = useCallback((layerId: string) => {
-    const layer = layers.find(l => l.id === layerId);
-    if (!layer || !layer.backgroundImage) return;
+    updateLayer(layerId, {
+      imageX: 0,
+      imageY: 0,
+      imageRotation: 0,
+    });
+  }, []);
 
-    const image = new Image();
-    image.onload = () => {
-        const canvas = document.getElementById('canvas-container');
-        const canvasWidth = canvas?.clientWidth || 500;
-        const canvasHeight = canvas?.clientHeight || 500;
-        
-        const aspectRatio = image.width / image.height;
-        let newWidth = canvasWidth * 0.5;
-        let newHeight = newWidth / aspectRatio;
-    
-        if (newHeight > canvasHeight * 0.8) {
-            newHeight = canvasHeight * 0.8;
-            newWidth = newHeight * aspectRatio;
-        }
-
-        updateLayer(layerId, {
-            imageWidth: newWidth,
-            imageHeight: newHeight,
-            imageX: canvasWidth / 2,
-            imageY: canvasHeight / 2,
-            imageRotation: 0,
-        });
-    }
-    image.src = layer.backgroundImage;
-}, [layers]);
+  const updateGridConfig = useCallback((updates: Partial<GridConfig>) => {
+    setGridConfig(prev => ({ ...prev, ...updates }));
+  }, []);
 
   return (
-    <DesignContext.Provider
-      value={{
-        layers,
-        activeLayerId,
-        scale,
-        isSymmetryEnabled,
-        measurement,
-        gridUnit,
-        setGridUnit,
-        setMeasurement,
-        toggleSymmetry,
-        addLayer,
-        removeLayer,
-        setActiveLayer,
-        updateActiveLayer,
-        addPoint,
-        clearPoints,
-        removeLastPoint,
-        updatePoint,
-        zoomIn,
-        zoomOut,
-        setScale,
-        detachLine,
-        getCanvasAsSvg,
-        updateLayerBackgroundImage,
-        resetImageTransform,
-      }}
-    >
+    <DesignContext.Provider value={{
+      layers,
+      activeLayerId,
+      scale,
+      isSymmetryEnabled,
+      measurement,
+      gridUnit,
+      gridType,
+      gridConfig,
+      setGridUnit,
+      setGridType,
+      setGridConfig: updateGridConfig,
+      setMeasurement,
+      toggleSymmetry,
+      addLayer,
+      removeLayer,
+      setActiveLayer,
+      updateActiveLayer,
+      addPoint,
+      clearPoints,
+      removeLastPoint,
+      updatePoint,
+      zoomIn,
+      zoomOut,
+      setScale,
+      detachLine,
+      getCanvasAsSvg,
+      updateLayerBackgroundImage,
+      resetImageTransform,
+    }}>
       {children}
     </DesignContext.Provider>
   );

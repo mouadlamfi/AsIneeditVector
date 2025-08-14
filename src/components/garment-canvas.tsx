@@ -3,12 +3,13 @@
 
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useDesign } from '@/context/design-context';
-import type { Point, GridUnit, Measurement, Layer } from '@/lib/types';
+import type { Point, GridUnit, Measurement, Layer, GridType } from '@/lib/types';
 import { Button } from './ui/button';
 import { Plus, Minus, Maximize2, RotateCcw, Grid3X3, Move } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { SacredGeometryGrid, snapToSacredGeometry, getSacredGeometryGuides } from './sacred-geometry-grids';
 
 const GRID_UNITS_IN_PIXELS = {
   inch: 96,
@@ -127,6 +128,34 @@ const GridLines = React.memo(({ width, height, scale, unit, offsetX, offsetY, vi
 
 GridLines.displayName = 'GridLines';
 
+// Guide lines component for sacred geometry
+const GuideLines = React.memo(({ guides, scale }: { 
+  guides: Array<{ x1: number; y1: number; x2: number; y2: number }>;
+  scale: number;
+}) => {
+  if (guides.length === 0) return null;
+
+  return (
+    <g className="guide-lines">
+      {guides.map((guide, index) => (
+        <line
+          key={`guide-${index}`}
+          x1={guide.x1}
+          y1={guide.y1}
+          x2={guide.x2}
+          y2={guide.y2}
+          stroke="hsla(200, 100%, 70%, 0.6)"
+          strokeWidth={1 / scale}
+          strokeDasharray={`${4/scale} ${4/scale}`}
+          className="guide-line"
+        />
+      ))}
+    </g>
+  );
+});
+
+GuideLines.displayName = 'GuideLines';
+
 type TransformMode = 'move' | 'rotate' | 'resize' | null;
 type CanvasMode = 'draw' | 'pan';
 
@@ -229,7 +258,26 @@ const PointRenderer = React.memo(({ layer, mirror, canDrag, canvasMode, activeLa
 PointRenderer.displayName = 'PointRenderer';
 
 export function GarmentCanvas() {
-  const { layers, activeLayerId, addPoint, removeLastPoint, updatePoint, scale, setScale, zoomIn, zoomOut, detachLine, isSymmetryEnabled, measurement, setMeasurement, gridUnit, updateActiveLayer } = useDesign();
+  const { 
+    layers, 
+    activeLayerId, 
+    addPoint, 
+    removeLastPoint, 
+    updatePoint, 
+    scale, 
+    setScale, 
+    zoomIn, 
+    zoomOut, 
+    detachLine, 
+    isSymmetryEnabled, 
+    measurement, 
+    setMeasurement, 
+    gridUnit, 
+    gridType,
+    gridConfig,
+    updateActiveLayer 
+  } = useDesign();
+  
   const canvasRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [draggingPointIndex, setDraggingPointIndex] = useState<number | null>(null);
@@ -239,6 +287,7 @@ export function GarmentCanvas() {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState<{ x: number, y: number } | null>(null);
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
+  const [guideLines, setGuideLines] = useState<Array<{ x1: number; y1: number; x2: number; y2: number }>>([]);
   
   const [transformMode, setTransformMode] = useState<TransformMode>(null);
   const [transformStart, setTransformStart] = useState<{ x: number, y: number, layer: any } | null>(null);
@@ -349,8 +398,32 @@ export function GarmentCanvas() {
     const rect = canvasRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left - canvasOffset.x) / scale;
     const y = (e.clientY - rect.top - canvasOffset.y) / scale;
+    
+    // Apply grid snapping for sacred geometry grids
+    if (gridType !== 'standard') {
+      const snappedPoint = snapToSacredGeometry(
+        { x, y },
+        gridType,
+        gridConfig,
+        canvasOffset.x,
+        canvasOffset.y
+      );
+      
+      // Update guide lines for visual feedback
+      const guides = getSacredGeometryGuides(
+        snappedPoint,
+        gridType,
+        gridConfig,
+        canvasOffset.x,
+        canvasOffset.y
+      );
+      setGuideLines(guides);
+      
+      return snappedPoint;
+    }
+    
     return { x, y };
-  }, [canvasOffset, scale]);
+  }, [canvasOffset, scale, gridType, gridConfig]);
   
   const handlePointMouseDown = (e: React.MouseEvent<SVGCircleElement>, index: number) => {
     e.stopPropagation();
@@ -497,7 +570,8 @@ export function GarmentCanvas() {
     if (canvasMode !== 'draw') return;
 
     if (e.detail === 1) { // Single click
-      addPoint(getRelativeCoords(e));
+      const coords = getRelativeCoords(e);
+      addPoint(coords);
     }
   };
 
@@ -871,15 +945,35 @@ export function GarmentCanvas() {
           }}
           pointerEvents="none"
         >
-          <GridLines 
-            width={2000} 
-            height={2000} 
-            scale={scale} 
-            unit={gridUnit}
-            offsetX={canvasOffset.x}
-            offsetY={canvasOffset.y}
-            viewportBounds={viewportBounds}
-          />
+          {/* Standard Grid */}
+          {gridType === 'standard' && (
+            <GridLines 
+              width={2000} 
+              height={2000} 
+              scale={scale} 
+              unit={gridUnit}
+              offsetX={canvasOffset.x}
+              offsetY={canvasOffset.y}
+              viewportBounds={viewportBounds}
+            />
+          )}
+          
+          {/* Sacred Geometry Grids */}
+          {gridType !== 'standard' && (
+            <SacredGeometryGrid
+              type={gridType}
+              config={gridConfig}
+              viewportBounds={viewportBounds}
+              scale={scale}
+              offsetX={canvasOffset.x}
+              offsetY={canvasOffset.y}
+            />
+          )}
+          
+          {/* Guide Lines for Sacred Geometry */}
+          {gridType !== 'standard' && guideLines.length > 0 && (
+            <GuideLines guides={guideLines} scale={scale} />
+          )}
           
           {/* Symmetry Line */}
           <line

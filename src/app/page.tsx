@@ -7,6 +7,7 @@ import { PenTool, Settings, HelpCircle, Zap, Layers, Palette, Ruler, Minus, Plus
 import { DrawingToolbar } from '@/components/drawing-toolbar';
 import { LayersPanel } from '@/components/layers-panel';
 import { MobileOptimizer } from '@/components/mobile-optimizer';
+import { GridSelector } from '@/components/grid-selector';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -66,6 +67,11 @@ function MainApp() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Grid Selector */}
+            <GridSelector />
+
+            <Separator orientation="vertical" className="h-6" />
+
             {/* Zoom Controls */}
             <div className="flex items-center gap-1 bg-background/50 rounded-lg p-1">
               <Tooltip>

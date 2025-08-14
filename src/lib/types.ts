@@ -28,3 +28,15 @@ export interface Measurement {
 }
 
 export type GridUnit = 'cm' | 'inch';
+
+export type GridType = 'standard' | 'flower-of-life' | 'diamond-scale';
+
+export interface GridConfig {
+  type: GridType;
+  unit: GridUnit;
+  scale: number;
+  opacity: number;
+  showGuides: boolean;
+  snapToGrid: boolean;
+  snapThreshold: number;
+}
