@@ -8,8 +8,7 @@ import { Lock, PenLine, Plus, Trash2, Download, Image as ImageIcon, X, RefreshCw
 import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
 import React from 'react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+// Heavy export libraries are loaded only when an export is triggered to keep the main bundle slim
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,6 +71,12 @@ export function LayersPanel() {
   }
 
   const exportLayer = async (layer: Layer, format: 'png' | 'pdf') => {
+    // Dynamically import the libraries only when we actually export something
+    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+      import(/* webpackChunkName: "html2canvas" */ 'html2canvas'),
+      import(/* webpackChunkName: "jspdf" */ 'jspdf'),
+    ]);
+  
     const svgString = getCanvasAsSvg(layer.id);
     if (!svgString) return;
   
