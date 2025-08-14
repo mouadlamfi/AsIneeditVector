@@ -227,7 +227,7 @@ export function LayersPanel() {
           
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 btn-animate" onClick={addLayer}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 btn-animate" onClick={() => addLayer()}>
                 <Plus className="h-4 w-4" />
                 <span className="sr-only">Add Layer</span>
               </Button>

@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useDesign } from '@/context/design-context';
 import type { Point, GridUnit, Measurement, Layer } from '@/lib/types';
 import { Button } from './ui/button';
@@ -15,8 +15,8 @@ const GRID_UNITS_IN_PIXELS = {
   cm: 37.795,
 };
 
-// Optimized grid rendering with viewport culling
-const GridLines = ({ width, height, scale, unit, offsetX, offsetY, viewportBounds }: { 
+// Memoized grid component for better performance
+const GridLines = React.memo(({ width, height, scale, unit, offsetX, offsetY, viewportBounds }: { 
   width: number; 
   height: number; 
   scale: number; 
@@ -33,95 +33,200 @@ const GridLines = ({ width, height, scale, unit, offsetX, offsetY, viewportBound
     const gridOffsetX = offsetX % subGridSize;
     const gridOffsetY = offsetY % subGridSize;
     
-    // Calculate visible grid range
+    // Calculate visible grid range with optimization
     const startX = Math.floor((viewportBounds.minX + gridOffsetX) / subGridSize);
     const endX = Math.ceil((viewportBounds.maxX + gridOffsetX) / subGridSize);
     const startY = Math.floor((viewportBounds.minY + gridOffsetY) / subGridSize);
     const endY = Math.ceil((viewportBounds.maxY + gridOffsetY) / subGridSize);
   
-    const lines = [];
+    // Memoize grid lines calculation
+    const lines = useMemo(() => {
+      const gridLines = [];
   
-    // Vertical lines (only render visible ones)
-    for (let i = startX; i <= endX; i++) {
-      const isMajorGridLine = i % 3 === 0;
-      const x = i * subGridSize - gridOffsetX;
-      lines.push(
-        <line 
-          key={`v-${i}`} 
-          x1={x} 
-          y1={viewportBounds.minY} 
-          x2={x} 
-          y2={viewportBounds.maxY} 
-          stroke={strokeColor} 
-          strokeWidth={(isMajorGridLine ? 0.5 : 0.25) / scale}
-          className="grid-enhanced"
-        />
-      );
-    }
-    
-    // Horizontal lines (only render visible ones)
-    for (let i = startY; i <= endY; i++) {
-      const isMajorGridLine = i % 3 === 0;
-      const y = i * subGridSize - gridOffsetY;
-      lines.push(
-        <line 
-          key={`h-${i}`} 
-          x1={viewportBounds.minX} 
-          y1={y} 
-          x2={viewportBounds.maxX} 
-          y2={y} 
-          stroke={strokeColor} 
-          strokeWidth={(isMajorGridLine ? 0.5 : 0.25) / scale}
-          className="grid-enhanced"
-        />
-      );
-    }
+      // Vertical lines (only render visible ones)
+      for (let i = startX; i <= endX; i++) {
+        const isMajorGridLine = i % 3 === 0;
+        const x = i * subGridSize - gridOffsetX;
+        gridLines.push(
+          <line 
+            key={`v-${i}`} 
+            x1={x} 
+            y1={viewportBounds.minY} 
+            x2={x} 
+            y2={viewportBounds.maxY} 
+            stroke={strokeColor} 
+            strokeWidth={(isMajorGridLine ? 0.5 : 0.25) / scale}
+            className="grid-enhanced"
+          />
+        );
+      }
+      
+      // Horizontal lines (only render visible ones)
+      for (let i = startY; i <= endY; i++) {
+        const isMajorGridLine = i % 3 === 0;
+        const y = i * subGridSize - gridOffsetY;
+        gridLines.push(
+          <line 
+            key={`h-${i}`} 
+            x1={viewportBounds.minX} 
+            y1={y} 
+            x2={viewportBounds.maxX} 
+            y2={y} 
+            stroke={strokeColor} 
+            strokeWidth={(isMajorGridLine ? 0.5 : 0.25) / scale}
+            className="grid-enhanced"
+          />
+        );
+      }
 
-    // 45-degree diagonal lines for major grid squares (only visible ones)
-    const majorStartX = Math.floor((viewportBounds.minX + (offsetX % majorGridSize)) / majorGridSize);
-    const majorEndX = Math.ceil((viewportBounds.maxX + (offsetX % majorGridSize)) / majorGridSize);
-    const majorStartY = Math.floor((viewportBounds.minY + (offsetY % majorGridSize)) / majorGridSize);
-    const majorEndY = Math.ceil((viewportBounds.maxY + (offsetY % majorGridSize)) / majorGridSize);
-    
-    for (let i = majorStartX; i <= majorEndX; i++) {
-        for (let j = majorStartY; j <= majorEndY; j++) {
-            const x = i * majorGridSize - (offsetX % majorGridSize);
-            const y = j * majorGridSize - (offsetY % majorGridSize);
-            
-            lines.push(
-              <line 
-                key={`d1-${i}-${j}`} 
-                x1={x} 
-                y1={y} 
-                x2={x + majorGridSize} 
-                y2={y + majorGridSize} 
-                stroke={strokeColor} 
-                strokeWidth={0.25 / scale} 
-                strokeDasharray={`${2/scale} ${2/scale}`}
-                className="grid-enhanced"
-              />
-            );
-            lines.push(
-              <line 
-                key={`d2-${i}-${j}`} 
-                x1={x + majorGridSize} 
-                y1={y} 
-                x2={x} 
-                y2={y + majorGridSize} 
-                stroke={strokeColor} 
-                strokeWidth={0.25 / scale} 
-                strokeDasharray={`${2/scale} ${2/scale}`}
-                className="grid-enhanced"
-              />
-            );
-        }
-    }
+      // 45-degree diagonal lines for major grid squares (only visible ones)
+      const majorStartX = Math.floor((viewportBounds.minX + (offsetX % majorGridSize)) / majorGridSize);
+      const majorEndX = Math.ceil((viewportBounds.maxX + (offsetX % majorGridSize)) / majorGridSize);
+      const majorStartY = Math.floor((viewportBounds.minY + (offsetY % majorGridSize)) / majorGridSize);
+      const majorEndY = Math.ceil((viewportBounds.maxY + (offsetY % majorGridSize)) / majorGridSize);
+      
+      for (let i = majorStartX; i <= majorEndX; i++) {
+          for (let j = majorStartY; j <= majorEndY; j++) {
+              const x = i * majorGridSize - (offsetX % majorGridSize);
+              const y = j * majorGridSize - (offsetY % majorGridSize);
+              
+              gridLines.push(
+                <line 
+                  key={`d1-${i}-${j}`} 
+                  x1={x} 
+                  y1={y} 
+                  x2={x + majorGridSize} 
+                  y2={y + majorGridSize} 
+                  stroke={strokeColor} 
+                  strokeWidth={0.25 / scale} 
+                  strokeDasharray={`${2/scale} ${2/scale}`}
+                  className="grid-enhanced"
+                />
+              );
+              gridLines.push(
+                <line 
+                  key={`d2-${i}-${j}`} 
+                  x1={x + majorGridSize} 
+                  y1={y} 
+                  x2={x} 
+                  y2={y + majorGridSize} 
+                  stroke={strokeColor} 
+                  strokeWidth={0.25 / scale} 
+                  strokeDasharray={`${2/scale} ${2/scale}`}
+                  className="grid-enhanced"
+                />
+              );
+          }
+      }
+      
+      return gridLines;
+    }, [startX, endX, startY, endY, gridOffsetX, gridOffsetY, viewportBounds, strokeColor, scale, offsetX, offsetY, majorGridSize]);
   
     return <g data-export-hide="false" className="grid-enhanced">{lines}</g>;
-};
+});
+
+GridLines.displayName = 'GridLines';
 
 type TransformMode = 'move' | 'rotate' | 'resize' | null;
 type CanvasMode = 'draw' | 'pan';
+
+// Memoized path rendering component
+const PathRenderer = React.memo(({ layer, mirror, getMirroredX, activeLayerId, scale }: {
+  layer: Layer;
+  mirror: boolean;
+  getMirroredX: (x: number) => number;
+  activeLayerId: string | null;
+  scale: number;
+}) => {
+  const getPathData = useCallback((pointSet: Point[]): string => {
+    if (pointSet.length < 1) return '';
+    
+    let pathData = `M ${pointSet[0].x} ${pointSet[0].y}`;
+    
+    for (let i = 1; i < pointSet.length; i++) {
+        if (pointSet[i-1].break) {
+            pathData += ` M ${pointSet[i].x} ${pointSet[i].y}`;
+            } else {
+            pathData += ` L ${pointSet[i].x} ${pointSet[i].y}`;
+        }
+    }
+
+    if (pointSet.length > 2 && !pointSet[pointSet.length - 1].break) {
+        pathData += ' Z';
+    }
+    return pathData;
+  }, []);
+
+  if (layer.points.length < 2) return null;
+  
+  const transformedPoints = layer.points.map(p => ({ 
+      ...p, 
+      x: mirror ? getMirroredX(p.x) : p.x,
+  }));
+  const pathData = getPathData(transformedPoints);
+  
+  return (
+    <path 
+      d={pathData} 
+      stroke={layer.color} 
+      strokeWidth={layer.strokeWidth / scale} 
+      fill="none"
+      className="transition-all duration-200"
+      style={{
+        filter: layer.id !== activeLayerId ? 'opacity(0.7)' : 'none'
+      }}
+    />
+  );
+});
+
+PathRenderer.displayName = 'PathRenderer';
+
+// Memoized point rendering component
+const PointRenderer = React.memo(({ layer, mirror, canDrag, canvasMode, activeLayerId, scale, getMirroredX, onPointMouseDown, onPointMouseEnter, onPointMouseLeave }: {
+  layer: Layer;
+  mirror: boolean;
+  canDrag: boolean;
+  canvasMode: string;
+  activeLayerId: string | null;
+  scale: number;
+  getMirroredX: (x: number) => number;
+  onPointMouseDown: (e: React.MouseEvent, index: number) => void;
+  onPointMouseEnter: (e: React.MouseEvent, index: number) => void;
+  onPointMouseLeave: (e: React.MouseEvent) => void;
+}) => {
+  return layer.points.map((p, i) => {
+    const cx = mirror ? getMirroredX(p.x) : p.x;
+    const cy = p.y;
+    const radius = layer.pointRadius / scale;
+    const isDraggable = !mirror && canDrag && canvasMode === 'draw';
+    const isActive = layer.id === activeLayerId;
+    
+    return (
+       <circle 
+          key={`${mirror ? 'mirror-' : ''}point-${i}`}
+          cx={cx} 
+          cy={cy} 
+          r={radius}
+          fill={isActive ? layer.color : 'transparent'}
+          stroke={layer.color}
+          strokeWidth={1 / scale}
+          className={cn(
+            "cursor-pointer transition-all duration-200",
+            isDraggable && "hover:r-4",
+            isActive && "ring-2 ring-primary/50"
+          )}
+          onMouseDown={isDraggable ? (e) => onPointMouseDown(e, i) : undefined}
+          onMouseEnter={isDraggable ? (e) => onPointMouseEnter(e, i) : undefined}
+          onMouseLeave={isDraggable ? onPointMouseLeave : undefined}
+          style={{
+            filter: !isActive ? 'opacity(0.7)' : 'none'
+          }}
+        />
+    );
+  });
+});
+
+PointRenderer.displayName = 'PointRenderer';
 
 export function GarmentCanvas() {
   const { layers, activeLayerId, addPoint, removeLastPoint, updatePoint, scale, setScale, zoomIn, zoomOut, detachLine, isSymmetryEnabled, measurement, setMeasurement, gridUnit, updateActiveLayer } = useDesign();
@@ -138,9 +243,9 @@ export function GarmentCanvas() {
   const [transformMode, setTransformMode] = useState<TransformMode>(null);
   const [transformStart, setTransformStart] = useState<{ x: number, y: number, layer: any } | null>(null);
 
-  const activeLayer = layers.find(l => l.id === activeLayerId);
+  const activeLayer = useMemo(() => layers.find(l => l.id === activeLayerId), [layers, activeLayerId]);
 
-  // Calculate the full design bounds
+  // Calculate the full design bounds with memoization
   const getDesignBounds = useCallback(() => {
     let minX = 0, minY = 0, maxX = 0, maxY = 0;
     let hasPoints = false;
@@ -188,6 +293,9 @@ export function GarmentCanvas() {
     };
   }, [canvasOffset, scale]);
 
+  // Memoize viewport bounds
+  const viewportBounds = useMemo(() => getViewportBounds(), [getViewportBounds]);
+
   useEffect(() => {
     const handleResize = () => {
       if (canvasRef.current) {
@@ -198,6 +306,7 @@ export function GarmentCanvas() {
       }
     };
     handleResize();
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -695,8 +804,6 @@ export function GarmentCanvas() {
       y: centerY - bounds.minY * newScale
     });
   };
-
-  const viewportBounds = getViewportBounds();
 
   return (
     <div
