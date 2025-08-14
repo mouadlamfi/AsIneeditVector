@@ -122,6 +122,100 @@ const GridLines = ({ width, height, scale, unit, offsetX, offsetY, viewportBound
     return <g data-export-hide="false" className="grid-enhanced">{lines}</g>;
 };
 
+// Flower of Life grid rendering
+const FlowerOfLifeGrid = ({ scale, unit, viewportBounds }: { 
+    scale: number; 
+    unit: GridUnit;
+    offsetX: number;
+    offsetY: number;
+    viewportBounds: { minX: number; minY: number; maxX: number; maxY: number };
+}) => {
+    const unitInPixels = GRID_UNITS_IN_PIXELS[unit];
+    // The base circle radius for the Flower of Life. A common size is based on the grid unit.
+    // Let's make the radius equal to half a unit for a balanced pattern.
+    const radius = (unitInPixels / 2) / scale;
+    const strokeColor = "#000000"; // Black lines for the pattern
+    const strokeWidth = 0.5 / scale;
+
+    const circles = [];
+
+    // Calculate the grid for the centers of the Flower of Life motifs.
+    // The distance between the centers of adjacent motifs is twice the radius horizontally,
+    // and radius * sqrt(3) vertically.
+    const horizontalSpacing = radius * 2;
+    const verticalSpacing = radius * Math.sqrt(3);
+
+    // Calculate the range of grid points that potentially contain visible motifs
+    const startX = Math.floor(viewportBounds.minX / horizontalSpacing) * horizontalSpacing;
+    const startY = Math.floor(viewportBounds.minY / verticalSpacing) * verticalSpacing;
+
+    const endX = viewportBounds.maxX + horizontalSpacing;
+    const endY = viewportBounds.maxY + verticalSpacing;
+
+    for (let y = startY; y < endY; y += verticalSpacing) {
+        // Alternate the horizontal offset for every other row to create the hexagonal packing
+        const rowOffsetX = (Math.round(y / verticalSpacing) % 2 === 0) ? 0 : radius;
+        for (let x = startX + rowOffsetX; x < endX; x += horizontalSpacing) {
+            // For each grid point, generate the circles for a Flower of Life motif
+            const centerX = x;
+            const centerY = y;
+
+            // Function to check if a circle is visible within the viewport
+            const isCircleVisible = (cx: number, cy: number, r: number) => {
+                const isPartiallyVisible =
+                    cx + r > viewportBounds.minX &&
+                    cx - r < viewportBounds.maxX &&
+                    cy + r > viewportBounds.minY &&
+                    cy - r < viewportBounds.maxY;
+                return isPartiallyVisible;
+            };
+
+            // Add the central circle if visible
+            if (isCircleVisible(centerX, centerY, radius)) {
+                circles.push(
+                    <circle
+                        key={`fol-${centerX}-${centerY}-center`}
+                        cx={centerX}
+                        cy={centerY}
+                        r={radius}
+                        stroke={strokeColor}
+                        strokeWidth={strokeWidth}
+                        fill="none"
+                        className="flower-of-life"
+                    />
+                );
+            }
+
+            // Add the six surrounding circles if visible
+            for (let i = 0; i < 6; i++) {
+                const angle = (i * 60) * Math.PI / 180; // Angle in radians
+                const petalX = centerX + radius * Math.cos(angle);
+                const petalY = centerY + radius * Math.sin(angle);
+                if (isCircleVisible(petalX, petalY, radius)) {
+                    circles.push(
+                        <circle
+                            key={`fol-${centerX}-${centerY}-petal-${i}`}
+                            cx={petalX}
+                            cy={petalY}
+                            r={radius}
+                            stroke={strokeColor}
+                            strokeWidth={strokeWidth}
+                            fill="none"
+                            className="flower-of-life"
+                        />
+                    );
+                }
+            }
+        }
+    }
+
+    // We apply the canvas offset and scale transformation directly to the SVG g element
+    // Remove transform from g as it's handled by the parent div
+    // return <g transform={`translate(${offsetX} ${offsetY}) scale(${scale})`} data-export-hide=\"true\" className=\"flower-of-life\">{circles}</g>;
+    // Render directly in the canvas coordinate space
+    return <g data-export-hide="true" className="flower-of-life">{circles}</g>;
+};
+
 type TransformMode = 'move' | 'rotate' | 'resize' | null;
 type CanvasMode = 'draw' | 'pan';
 
@@ -488,7 +582,7 @@ export function GarmentCanvas() {
   }
 
   const gridStyle = {
-    backgroundColor: 'hsl(var(--paper-background))',
+    backgroundColor: '#FFFFFF', // Set canvas background to white
     minHeight: '100%',
   };
 
@@ -772,15 +866,8 @@ export function GarmentCanvas() {
           pointerEvents="none"
         >
           <GridLines 
-            width={2000} 
-            height={2000} 
-            scale={scale} 
-            unit={gridUnit}
-            offsetX={canvasOffset.x}
-            offsetY={canvasOffset.y}
-            viewportBounds={viewportBounds}
+            // GridLines component removed to use FlowerOfLifeGrid as background
           />
-          
           {/* Symmetry Line */}
           <line
             data-export-hide="false"

@@ -30,12 +30,10 @@ const PROFESSIONAL_COLORS = [
 ];
 
 const STROKE_PRESETS = [
-  { name: 'Hairline', value: 0.5, icon: '—' },
-  { name: 'Thin', value: 1, icon: '—' },
-  { name: 'Normal', value: 2, icon: '—' },
-  { name: 'Medium', value: 3, icon: '—' },
-  { name: 'Thick', value: 5, icon: '—' },
-  { name: 'Bold', value: 8, icon: '—' },
+  { name: 'Full Line', value: 1, icon: '—' },
+  { name: 'Interlines 0.5', value: 0.5, icon: '—' },
+  { name: 'Interlines 0.3', value: 0.3, icon: '—' },
+  { name: 'Interlines 0.1', value: 0.1, icon: '—' },
 ];
 
 const POINT_PRESETS = [
@@ -187,35 +185,6 @@ export function DrawingToolbar() {
           
           <div className="space-y-4">
             {/* Stroke Width Presets */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">PRESETS</Label>
-              <div className="grid grid-cols-3 gap-1">
-                {STROKE_PRESETS.map(preset => (
-                  <Tooltip key={preset.value}>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className={cn(
-                          "px-2 py-1 text-xs rounded border transition-all duration-200 hover:bg-accent",
-                          activeLayer?.strokeWidth === preset.value
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-background border-border hover:border-primary/50',
-                          isLocked && 'cursor-not-allowed opacity-50'
-                        )}
-                        onClick={() => handleStrokePreset(preset.value)}
-                        disabled={isLocked}
-                      >
-                        {preset.icon}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{preset.name} ({preset.value}px)</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
-            </div>
-
             {/* Stroke Width Slider */}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
@@ -247,35 +216,6 @@ export function DrawingToolbar() {
           
           <div className="space-y-4">
             {/* Point Size Presets */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">PRESETS</Label>
-              <div className="grid grid-cols-3 gap-1">
-                {POINT_PRESETS.map(preset => (
-                  <Tooltip key={preset.value}>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className={cn(
-                          "px-2 py-1 text-xs rounded border transition-all duration-200 hover:bg-accent",
-                          activeLayer?.pointRadius === preset.value
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-background border-border hover:border-primary/50',
-                          isLocked && 'cursor-not-allowed opacity-50'
-                        )}
-                        onClick={() => handlePointPreset(preset.value)}
-                        disabled={isLocked}
-                      >
-                        {preset.icon}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{preset.name} ({preset.value}px)</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
-            </div>
-
             {/* Point Size Slider */}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
