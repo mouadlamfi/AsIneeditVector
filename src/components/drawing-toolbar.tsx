@@ -3,8 +3,8 @@
 
 import { useDesign } from '@/context/design-context';
 import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Trash2, Undo2, Spline, Palette, Settings, Zap, Eye, EyeOff } from 'lucide-react';
+import { Card, CardContent } from './ui/card';
+import { Trash2, Undo2, Palette, Settings, Zap, Eye, Move, PenTool } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { Slider } from './ui/slider';
 import { Label } from './ui/label';
@@ -13,6 +13,15 @@ import { Switch } from './ui/switch';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Badge } from './ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Input } from './ui/input';
+import { useState } from 'react';
 import type { GridUnit } from '@/lib/types';
 
 const PROFESSIONAL_COLORS = [
@@ -29,23 +38,6 @@ const PROFESSIONAL_COLORS = [
   { name: 'Black', value: '#000000', category: 'black' },
 ];
 
-const STROKE_PRESETS = [
-  { name: 'Hairline', value: 0.5, icon: '—' },
-  { name: 'Thin', value: 1, icon: '—' },
-  { name: 'Normal', value: 2, icon: '—' },
-  { name: 'Medium', value: 3, icon: '—' },
-  { name: 'Thick', value: 5, icon: '—' },
-  { name: 'Bold', value: 8, icon: '—' },
-];
-
-const POINT_PRESETS = [
-  { name: 'Small', value: 2, icon: '●' },
-  { name: 'Normal', value: 4, icon: '●' },
-  { name: 'Medium', value: 6, icon: '●' },
-  { name: 'Large', value: 8, icon: '●' },
-  { name: 'Extra Large', value: 12, icon: '●' },
-];
-
 export function DrawingToolbar() {
   const { 
     clearPoints, 
@@ -57,12 +49,14 @@ export function DrawingToolbar() {
     toggleSymmetry, 
     removeLastPoint, 
     gridUnit, 
-    setGridUnit, 
-    detachLine 
+    setGridUnit,
+    canvasMode,
+    setCanvasMode
   } = useDesign();
   
   const activeLayer = layers.find(l => l.id === activeLayerId);
   const isLocked = activeLayer?.isLocked;
+  const [customColor, setCustomColor] = useState(activeLayer?.color || '#000000');
 
   const handleStrokeWidthChange = (value: number[]) => {
     if (activeLayer) {
@@ -79,23 +73,63 @@ export function DrawingToolbar() {
   const handleColorChange = (color: string) => {
     if (activeLayer) {
       updateActiveLayer({ color });
+      setCustomColor(color);
     }
   };
 
-  const handleStrokePreset = (value: number) => {
-    if (activeLayer) {
-      updateActiveLayer({ strokeWidth: value });
-    }
-  };
-
-  const handlePointPreset = (value: number) => {
-    if (activeLayer) {
-      updateActiveLayer({ pointRadius: value });
+  const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const color = e.target.value;
+    setCustomColor(color);
+    if (activeLayer && /^#[0-9A-F]{6}$/i.test(color)) {
+      updateActiveLayer({ color });
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Canvas Mode Toggle */}
+      <Card className="card-enhanced">
+        <CardContent className="p-4 space-y-4">
+          <Label className="text-sm font-medium">Canvas Mode</Label>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={canvasMode === 'draw' ? 'default' : 'outline'}
+                  size="sm"
+                  className="flex items-center gap-2"
+                  onClick={() => setCanvasMode('draw')}
+                >
+                  <PenTool className="h-4 w-4" />
+                  <span className="text-xs">Draw</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Drawing Mode - Click to add points</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={canvasMode === 'pan' ? 'default' : 'outline'}
+                  size="sm"
+                  className="flex items-center gap-2"
+                  onClick={() => setCanvasMode('pan')}
+                >
+                  <Move className="h-4 w-4" />
+                  <span className="text-xs">Pan</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Pan Mode - Click to navigate canvas</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Zoom and View Controls */}
       <Card className="card-enhanced">
         <CardContent className="p-4 space-y-4">
@@ -146,34 +180,82 @@ export function DrawingToolbar() {
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center gap-2">
             <Palette className="h-4 w-4 text-primary" />
-            <Label className="text-sm font-medium">Color Palette</Label>
+            <Label className="text-sm font-medium">Color</Label>
           </div>
           
-          <div className="grid grid-cols-5 gap-2">
-            {PROFESSIONAL_COLORS.map(color => (
-              <Tooltip key={color.value}>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      "h-8 w-8 rounded-lg border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                      activeLayer?.color === color.value 
-                        ? 'border-primary ring-2 ring-primary/20' 
-                        : 'border-border hover:border-primary/50',
-                      isLocked && 'cursor-not-allowed opacity-50'
-                    )}
-                    style={{ backgroundColor: color.value }}
-                    onClick={() => handleColorChange(color.value)}
+          {/* Color Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="w-full h-10 flex items-center gap-2"
+                disabled={isLocked}
+              >
+                <div 
+                  className="w-4 h-4 rounded border"
+                  style={{ backgroundColor: activeLayer?.color || '#000000' }}
+                />
+                <span className="text-xs font-mono">
+                  {activeLayer?.color || '#000000'}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              {/* Custom Color Input */}
+              <div className="p-3 border-b">
+                <Label className="text-xs font-medium mb-2 block">Custom Color</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="color"
+                    value={customColor}
+                    onChange={handleCustomColorChange}
+                    className="w-12 h-8 p-1 border rounded"
                     disabled={isLocked}
-                    aria-label={`Set color to ${color.name}`}
                   />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{color.name}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
+                  <Input
+                    type="text"
+                    value={customColor}
+                    onChange={handleCustomColorChange}
+                    placeholder="#000000"
+                    className="flex-1 text-xs font-mono"
+                    disabled={isLocked}
+                  />
+                </div>
+              </div>
+              
+              <DropdownMenuSeparator />
+              
+              {/* Color Presets */}
+              <div className="p-3">
+                <Label className="text-xs font-medium mb-2 block">Preset Colors</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {PROFESSIONAL_COLORS.map(color => (
+                    <Tooltip key={color.value}>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className={cn(
+                            "h-8 w-8 rounded border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                            activeLayer?.color === color.value 
+                              ? 'border-primary ring-2 ring-primary/20' 
+                              : 'border-border hover:border-primary/50',
+                            isLocked && 'cursor-not-allowed opacity-50'
+                          )}
+                          style={{ backgroundColor: color.value }}
+                          onClick={() => handleColorChange(color.value)}
+                          disabled={isLocked}
+                          aria-label={`Set color to ${color.name}`}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{color.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardContent>
       </Card>
 
@@ -186,36 +268,6 @@ export function DrawingToolbar() {
           </div>
           
           <div className="space-y-4">
-            {/* Stroke Width Presets */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">PRESETS</Label>
-              <div className="grid grid-cols-3 gap-1">
-                {STROKE_PRESETS.map(preset => (
-                  <Tooltip key={preset.value}>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className={cn(
-                          "px-2 py-1 text-xs rounded border transition-all duration-200 hover:bg-accent",
-                          activeLayer?.strokeWidth === preset.value
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-background border-border hover:border-primary/50',
-                          isLocked && 'cursor-not-allowed opacity-50'
-                        )}
-                        onClick={() => handleStrokePreset(preset.value)}
-                        disabled={isLocked}
-                      >
-                        {preset.icon}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{preset.name} ({preset.value}px)</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
-            </div>
-
             {/* Stroke Width Slider */}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
@@ -246,36 +298,6 @@ export function DrawingToolbar() {
           </div>
           
           <div className="space-y-4">
-            {/* Point Size Presets */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">PRESETS</Label>
-              <div className="grid grid-cols-3 gap-1">
-                {POINT_PRESETS.map(preset => (
-                  <Tooltip key={preset.value}>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className={cn(
-                          "px-2 py-1 text-xs rounded border transition-all duration-200 hover:bg-accent",
-                          activeLayer?.pointRadius === preset.value
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-background border-border hover:border-primary/50',
-                          isLocked && 'cursor-not-allowed opacity-50'
-                        )}
-                        onClick={() => handlePointPreset(preset.value)}
-                        disabled={isLocked}
-                      >
-                        {preset.icon}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{preset.name} ({preset.value}px)</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
-            </div>
-
             {/* Point Size Slider */}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
@@ -300,28 +322,16 @@ export function DrawingToolbar() {
       {/* Action Buttons */}
       <Card className="card-enhanced">
         <CardContent className="p-4 space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="btn-animate"
-              onClick={removeLastPoint}
-              disabled={isLocked}
-            >
-              <Undo2 className="mr-2 h-3 w-3" />
-              Undo
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="btn-animate"
-              onClick={detachLine}
-              disabled={isLocked}
-            >
-              <Spline className="mr-2 h-3 w-3" />
-              New Line
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full btn-animate"
+            onClick={removeLastPoint}
+            disabled={isLocked}
+          >
+            <Undo2 className="mr-2 h-3 w-3" />
+            Undo Last Point
+          </Button>
           
           <Button
             variant="destructive"
@@ -331,7 +341,7 @@ export function DrawingToolbar() {
             disabled={isLocked}
           >
             <Trash2 className="mr-2 h-3 w-3" />
-            Clear Active Layer
+            Clear Layer
           </Button>
         </CardContent>
       </Card>

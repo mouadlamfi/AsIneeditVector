@@ -275,6 +275,8 @@ export function GarmentCanvas() {
     gridUnit, 
     gridType,
     gridConfig,
+    canvasMode,
+    setCanvasMode,
     updateActiveLayer 
   } = useDesign();
   
@@ -283,7 +285,6 @@ export function GarmentCanvas() {
   const [draggingPointIndex, setDraggingPointIndex] = useState<number | null>(null);
   const [currentMousePosition, setCurrentMousePosition] = useState<Point | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  const [canvasMode, setCanvasMode] = useState<CanvasMode>('draw');
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState<{ x: number, y: number } | null>(null);
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
@@ -564,14 +565,30 @@ export function GarmentCanvas() {
   }
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!activeLayer || activeLayer.isLocked) return;
     if (transformMode) return;
     if (draggingPointIndex !== null) return;
-    if (canvasMode !== 'draw') return;
 
-    if (e.detail === 1) { // Single click
+    if (canvasMode === 'pan') {
+      // Click to navigate - center the view on clicked point
       const coords = getRelativeCoords(e);
-      addPoint(coords);
+      const canvasWidth = canvasSize.width;
+      const canvasHeight = canvasSize.height;
+      
+      // Calculate new offset to center the clicked point
+      const newOffsetX = canvasWidth / 2 - coords.x * scale;
+      const newOffsetY = canvasHeight / 2 - coords.y * scale;
+      
+      setCanvasOffset({ x: newOffsetX, y: newOffsetY });
+      return;
+    }
+
+    if (canvasMode === 'draw') {
+      if (!activeLayer || activeLayer.isLocked) return;
+      
+      if (e.detail === 1) { // Single click
+        const coords = getRelativeCoords(e);
+        addPoint(coords);
+      }
     }
   };
 

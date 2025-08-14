@@ -5,6 +5,8 @@ import type { Point, Layer, Measurement, GridUnit, GridType, GridConfig } from '
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
+type CanvasMode = 'draw' | 'pan';
+
 interface DesignContextState {
   layers: Layer[];
   activeLayerId: string | null;
@@ -14,6 +16,8 @@ interface DesignContextState {
   gridUnit: GridUnit;
   gridType: GridType;
   gridConfig: GridConfig;
+  canvasMode: CanvasMode;
+  setCanvasMode: (mode: CanvasMode) => void;
   setGridUnit: (unit: GridUnit) => void;
   setGridType: (type: GridType) => void;
   setGridConfig: (config: Partial<GridConfig>) => void;
@@ -66,6 +70,7 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
   const [gridUnit, setGridUnit] = useState<GridUnit>('inch');
   const [gridType, setGridType] = useState<GridType>('standard');
   const [gridConfig, setGridConfig] = useState<GridConfig>(initialGridConfig);
+  const [canvasMode, setCanvasMode] = useState<CanvasMode>('draw');
 
   const toggleSymmetry = useCallback(() => setIsSymmetryEnabled(prev => !prev), []);
   const zoomIn = useCallback(() => setScale(s => Math.min(s + 0.1, 5)), []);
@@ -235,6 +240,8 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
       gridUnit,
       gridType,
       gridConfig,
+      canvasMode,
+      setCanvasMode,
       setGridUnit,
       setGridType,
       setGridConfig: updateGridConfig,
