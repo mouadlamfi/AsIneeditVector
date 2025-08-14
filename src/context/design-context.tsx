@@ -2,6 +2,7 @@
 "use client";
 
 import type { Point, Layer, Measurement, GridUnit } from '@/lib/types';
+import type { PatternOptions } from '@/lib/background-patterns';
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,6 +13,8 @@ interface DesignContextState {
   isSymmetryEnabled: boolean;
   measurement: Measurement | null;
   gridUnit: GridUnit;
+  backgroundPatternId: string | null;
+  backgroundPatternOptions: PatternOptions;
   setGridUnit: (unit: GridUnit) => void;
   setMeasurement: (measurement: Measurement | null) => void;
   toggleSymmetry: () => void;
@@ -30,6 +33,8 @@ interface DesignContextState {
   getCanvasAsSvg: (layerId?: string) => string | null;
   updateLayerBackgroundImage: (layerId: string, image: string | undefined, width: number, height: number) => void;
   resetImageTransform: (layerId: string) => void;
+  setBackgroundPattern: (patternId: string | null, options?: PatternOptions) => void;
+  updateBackgroundPatternOptions: (options: PatternOptions) => void;
 }
 
 const DesignContext = createContext<DesignContextState | undefined>(undefined);
@@ -50,6 +55,13 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
   const [isSymmetryEnabled, setIsSymmetryEnabled] = useState(true);
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const [gridUnit, setGridUnit] = useState<GridUnit>('inch');
+  const [backgroundPatternId, setBackgroundPatternId] = useState<string | null>(null);
+  const [backgroundPatternOptions, setBackgroundPatternOptions] = useState<PatternOptions>({
+    strokeColor: '#333333',
+    strokeWidth: 1,
+    opacity: 0.3,
+    scale: 1,
+  });
 
   const toggleSymmetry = useCallback(() => setIsSymmetryEnabled(prev => !prev), []);
   const zoomIn = useCallback(() => setScale(s => Math.min(s + 0.1, 5)), []);
@@ -240,6 +252,17 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
     image.src = layer.backgroundImage;
 }, [layers]);
 
+  const setBackgroundPattern = useCallback((patternId: string | null, options?: PatternOptions) => {
+    setBackgroundPatternId(patternId);
+    if (options) {
+      setBackgroundPatternOptions(options);
+    }
+  }, []);
+
+  const updateBackgroundPatternOptions = useCallback((options: PatternOptions) => {
+    setBackgroundPatternOptions(options);
+  }, []);
+
   return (
     <DesignContext.Provider
       value={{
@@ -267,6 +290,10 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
         getCanvasAsSvg,
         updateLayerBackgroundImage,
         resetImageTransform,
+        backgroundPatternId,
+        backgroundPatternOptions,
+        setBackgroundPattern,
+        updateBackgroundPatternOptions,
       }}
     >
       {children}

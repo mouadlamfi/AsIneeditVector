@@ -14,6 +14,8 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Badge } from './ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import type { GridUnit } from '@/lib/types';
+import { BackgroundPatternSelector } from './background-pattern-selector';
+import { useState } from 'react';
 
 const PROFESSIONAL_COLORS = [
   { name: 'Primary', value: '#3B82F6', category: 'blue' },
@@ -58,9 +60,13 @@ export function DrawingToolbar() {
     removeLastPoint, 
     gridUnit, 
     setGridUnit, 
-    detachLine 
+    detachLine,
+    backgroundPatternId,
+    setBackgroundPattern,
+    updateBackgroundPatternOptions
   } = useDesign();
   
+  const [showPatternSelector, setShowPatternSelector] = useState(false);
   const activeLayer = layers.find(l => l.id === activeLayerId);
   const isLocked = activeLayer?.isLocked;
 
@@ -333,6 +339,27 @@ export function DrawingToolbar() {
             <Trash2 className="mr-2 h-3 w-3" />
             Clear Active Layer
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Background Pattern Selector */}
+      <Card className="card-enhanced">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            Drawing Guides
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="relative">
+            <BackgroundPatternSelector
+              selectedPatternId={backgroundPatternId}
+              onPatternSelect={setBackgroundPattern}
+              onPatternOptionsChange={updateBackgroundPatternOptions}
+              isVisible={showPatternSelector}
+              onVisibilityToggle={() => setShowPatternSelector(!showPatternSelector)}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

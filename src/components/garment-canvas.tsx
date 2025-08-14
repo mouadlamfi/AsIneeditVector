@@ -11,6 +11,7 @@ import { Badge } from './ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { useMobileOptimization } from '@/hooks/use-mobile-optimization';
 import { OptimizedSVGRenderer } from './optimized-svg-renderer';
+import { useBackgroundPattern } from '@/hooks/use-background-pattern';
 
 const GRID_UNITS_IN_PIXELS = {
   inch: 96,
@@ -126,7 +127,7 @@ type TransformMode = 'move' | 'rotate' | 'resize' | null;
 type CanvasMode = 'draw' | 'pan';
 
 export function GarmentCanvas() {
-  const { layers, activeLayerId, addPoint, removeLastPoint, updatePoint, scale, setScale, zoomIn, zoomOut, detachLine, isSymmetryEnabled, measurement, setMeasurement, gridUnit, updateActiveLayer } = useDesign();
+  const { layers, activeLayerId, addPoint, removeLastPoint, updatePoint, scale, setScale, zoomIn, zoomOut, detachLine, isSymmetryEnabled, measurement, setMeasurement, gridUnit, updateActiveLayer, backgroundPatternId, backgroundPatternOptions } = useDesign();
   const mobileOpt = useMobileOptimization();
   const canvasRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -144,6 +145,15 @@ export function GarmentCanvas() {
   // Get mobile-optimized settings
   const optimizedSettings = mobileOpt.getOptimizedSettings();
   const cssVariables = mobileOpt.getCSSVariables();
+  
+  // Background pattern hook for optimized rendering
+  const backgroundPattern = useBackgroundPattern({
+    patternId: backgroundPatternId,
+    options: backgroundPatternOptions,
+    canvasWidth: 2000,
+    canvasHeight: 2000,
+    scale
+  });
 
   const activeLayer = layers.find(l => l.id === activeLayerId);
 
@@ -796,6 +806,15 @@ export function GarmentCanvas() {
             strokeWidth={1 / scale}
             strokeDasharray={`${8/scale} ${4/scale}`}
           />
+          
+          {/* Background Pattern */}
+          {backgroundPattern.shouldRender && backgroundPattern.patternSVG && (
+            <g 
+              id="background-pattern" 
+              data-export-hide="false"
+              dangerouslySetInnerHTML={{ __html: backgroundPattern.patternSVG }}
+            />
+          )}
           
           {layers.map(layer => {
             const isLayerActive = layer.id === activeLayerId;
