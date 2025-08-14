@@ -17,11 +17,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { useState, useRef } from 'react';
 import { useDesign } from '@/context/design-context';
 import type { Point } from '@/lib/types';
+import { ExportMenu } from '@/components/export-menu';
 
 function addWatermark(container: HTMLElement) {
   const watermark = document.createElement('div');
@@ -37,7 +36,7 @@ function addWatermark(container: HTMLElement) {
   return watermark;
 }
 
-function ExportMenu() {
+function EnhancedExportMenu() {
   const [isExporting, setIsExporting] = useState(false);
   const { layers, scale, gridUnit, getCanvasAsSvg, measurement } = useDesign();
 
@@ -415,6 +414,9 @@ function ExportMenu() {
           await new Promise(resolve => setTimeout(resolve, 1500));
 
           try {
+            // Lazy load html2canvas
+            const { default: html2canvas } = await import('html2canvas');
+            
             // Capture the clean export container
             const canvas = await html2canvas(exportContainer, {
               backgroundColor: '#1a1a1a',
@@ -456,6 +458,8 @@ function ExportMenu() {
                 pdfWidth = 210 * imgAspectRatio;
               }
               
+              // Lazy load jsPDF
+              const { default: jsPDF } = await import('jspdf');
               const pdf = new jsPDF({
                 orientation: imgAspectRatio > 1 ? 'landscape' : 'portrait',
                 unit: 'mm',
