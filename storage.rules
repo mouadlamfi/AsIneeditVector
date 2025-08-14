@@ -1,0 +1,46 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow authenticated users to upload their own files
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to upload design assets
+    match /designs/{designId}/{allPaths=**} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.metadata.userId;
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.metadata.userId;
+    }
+    
+    // Allow authenticated users to upload project assets
+    match /projects/{projectId}/{allPaths=**} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.metadata.userId;
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.metadata.userId;
+    }
+    
+    // Allow authenticated users to upload template assets
+    match /templates/{templateId}/{allPaths=**} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.metadata.userId;
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.metadata.userId;
+    }
+    
+    // Public read access for shared template assets
+    match /shared-templates/{templateId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        request.auth.uid == resource.metadata.userId;
+    }
+    
+    // File size and type validation
+    function isValidFile() {
+      return request.resource.size < 10 * 1024 * 1024 && // 10MB max
+             request.resource.contentType.matches('image/.*|application/pdf|text/.*');
+    }
+  }
+}

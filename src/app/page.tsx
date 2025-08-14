@@ -3,7 +3,7 @@
 
 import { DesignProvider } from '@/context/design-context';
 import { GarmentCanvas } from '@/components/garment-canvas';
-import { PenTool, Settings, HelpCircle, Zap, Layers, Palette, Ruler, Minus, Plus } from 'lucide-react';
+import { PenTool, Settings, HelpCircle, Zap, Layers, Palette, Ruler, Minus, Plus, LogOut, User } from 'lucide-react';
 import { DrawingToolbar } from '@/components/drawing-toolbar';
 import { LayersPanel } from '@/components/layers-panel';
 import { MobileOptimizer } from '@/components/mobile-optimizer';
@@ -14,7 +14,17 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useState, useRef, lazy, Suspense } from 'react';
 import { useDesign } from '@/context/design-context';
+import { useAuthContext } from '@/context/auth-context';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Lazy load the export menu to reduce initial bundle size
 const ExportMenu = lazy(() => import('@/components/export-menu'));
@@ -26,24 +36,28 @@ const ExportMenuLoader = () => (
   </div>
 );
 
-function addWatermark(container: HTMLElement) {
-  const watermark = document.createElement('div');
-  watermark.innerText = 'by AsIneedit.com';
-  watermark.style.position = 'absolute';
-  watermark.style.bottom = '10px';
-  watermark.style.right = '10px';
-  watermark.style.color = 'rgba(0, 0, 0, 0.5)';
-  watermark.style.fontSize = '12px';
-  watermark.style.pointerEvents = 'none';
-  watermark.id = 'watermark';
-  container.appendChild(watermark);
-  return watermark;
-}
-
 function MainApp() {
   const { layers, scale, gridUnit, measurement, zoomIn, zoomOut } = useDesign();
+  const { user, logout } = useAuthContext();
   const [showLayers, setShowLayers] = useState(true);
   const [showToolbar, setShowToolbar] = useState(true);
+
+  const handleLogout = async () => {
+    const result = await logout();
+    if (!result.success) {
+      console.error('Logout failed:', result.error);
+    }
+  };
+
+  const getUserInitials = (displayName: string | null | undefined) => {
+    if (!displayName) return 'U';
+    return displayName
+      .split(' ')
+      .map(name => name[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <div className="flex h-screen bg-background">
@@ -84,11 +98,11 @@ function MainApp() {
                   <p>Zoom Out</p>
                 </TooltipContent>
               </Tooltip>
-              
+
               <span className="text-sm font-mono px-2 min-w-[60px] text-center">
                 {Math.round(scale * 100)}%
               </span>
-              
+
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={zoomIn}>
@@ -110,13 +124,59 @@ function MainApp() {
 
             <Separator orientation="vertical" className="h-6" />
 
+            {/* User Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'User'} />
+                    <AvatarFallback className="text-xs">
+                      {getUserInitials(user?.displayName)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'User'} />
+                    <AvatarFallback className="text-xs">
+                      {getUserInitials(user?.displayName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {user?.displayName || 'User'}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email}
+                    </p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {/* Toggle Buttons */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8" 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
                   onClick={() => setShowToolbar(!showToolbar)}
                 >
                   <PenTool className="h-4 w-4" />
@@ -129,10 +189,10 @@ function MainApp() {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8" 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
                   onClick={() => setShowLayers(!showLayers)}
                 >
                   <Layers className="h-4 w-4" />
@@ -140,17 +200,6 @@ function MainApp() {
               </TooltipTrigger>
               <TooltipContent>
                 <p>Toggle Layers</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Settings</p>
               </TooltipContent>
             </Tooltip>
 
@@ -178,7 +227,7 @@ function MainApp() {
             <span>Grid: {gridUnit}</span>
             {measurement && (
               <span>
-                Length: {measurement.length.toFixed(2)} {gridUnit} | 
+                Length: {measurement.length.toFixed(2)} {gridUnit} |
                 Angle: {measurement.angle.toFixed(1)}°
               </span>
             )}
@@ -204,11 +253,13 @@ function MainApp() {
 export default function HomePage() {
   return (
     <TooltipProvider>
-      <DesignProvider>
-        <MobileOptimizer>
-          <MainApp />
-        </MobileOptimizer>
-      </DesignProvider>
+      <ProtectedRoute>
+        <DesignProvider>
+          <MobileOptimizer>
+            <MainApp />
+          </MobileOptimizer>
+        </DesignProvider>
+      </ProtectedRoute>
     </TooltipProvider>
   );
 }
