@@ -8,8 +8,11 @@ import { Lock, PenLine, Plus, Trash2, Download, Image as ImageIcon, X, RefreshCw
 import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
 import React from 'react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+// Lazy load heavy libraries
+const loadExportLibraries = () => Promise.all([
+  import('jspdf'),
+  import('html2canvas')
+]);
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -110,21 +113,25 @@ export function LayersPanel() {
   
     const elementToCapture = tempSvgContainer;
   
-    html2canvas(elementToCapture, { backgroundColor: null, useCORS: true }).then((canvas) => {
+    loadExportLibraries().then(([{ default: jsPDF }, { default: html2canvas }]) => {
+      return html2canvas(elementToCapture, { backgroundColor: null, useCORS: true });
+    }).then((canvas) => {
       if (format === 'png') {
         const a = document.createElement('a');
         a.href = canvas.toDataURL('image/png');
         a.download = `${layer.name}.png`;
         a.click();
       } else {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-          orientation: 'landscape',
-          unit: 'px',
-          format: [canvas.width, canvas.height]
+        loadExportLibraries().then(([{ default: jsPDF }]) => {
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+          });
+          pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+          pdf.save(`${layer.name}.pdf`);
         });
-        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-        pdf.save(`${layer.name}.pdf`);
       }
       // Clean up the temporary element
       document.body.removeChild(tempSvgContainer);
@@ -227,7 +234,7 @@ export function LayersPanel() {
           
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 btn-animate" onClick={addLayer}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 btn-animate" onClick={() => addLayer()}>
                 <Plus className="h-4 w-4" />
                 <span className="sr-only">Add Layer</span>
               </Button>

@@ -9,6 +9,8 @@ import { Plus, Minus, Maximize2, RotateCcw, Grid3X3, Move } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { useMobileOptimization } from '@/hooks/use-mobile-optimization';
+import { OptimizedSVGRenderer } from './optimized-svg-renderer';
 
 const GRID_UNITS_IN_PIXELS = {
   inch: 96,
@@ -125,6 +127,7 @@ type CanvasMode = 'draw' | 'pan';
 
 export function GarmentCanvas() {
   const { layers, activeLayerId, addPoint, removeLastPoint, updatePoint, scale, setScale, zoomIn, zoomOut, detachLine, isSymmetryEnabled, measurement, setMeasurement, gridUnit, updateActiveLayer } = useDesign();
+  const mobileOpt = useMobileOptimization();
   const canvasRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [draggingPointIndex, setDraggingPointIndex] = useState<number | null>(null);
@@ -137,6 +140,10 @@ export function GarmentCanvas() {
   
   const [transformMode, setTransformMode] = useState<TransformMode>(null);
   const [transformStart, setTransformStart] = useState<{ x: number, y: number, layer: any } | null>(null);
+  
+  // Get mobile-optimized settings
+  const optimizedSettings = mobileOpt.getOptimizedSettings();
+  const cssVariables = mobileOpt.getCSSVariables();
 
   const activeLayer = layers.find(l => l.id === activeLayerId);
 

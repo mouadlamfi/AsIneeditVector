@@ -15,7 +15,7 @@ interface DesignContextState {
   setGridUnit: (unit: GridUnit) => void;
   setMeasurement: (measurement: Measurement | null) => void;
   toggleSymmetry: () => void;
-  addLayer: () => void;
+  addLayer: (existingLayer?: Layer) => void;
   removeLayer: (layerId: string) => void;
   setActiveLayer: (layerId: string) => void;
   updateActiveLayer: (updates: Partial<Layer>) => void;
