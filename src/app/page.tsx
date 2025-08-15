@@ -8,7 +8,7 @@ import { CollapsibleMenu } from '@/components/collapsible-menu';
 import { MeasurementDisplay } from '@/components/measurement-display';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Menu, X } from 'lucide-react';
+import { Pen, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function MainApp() {
@@ -20,30 +20,29 @@ function MainApp() {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden">
-      {/* Logo Toggle Button */}
+      {/* Pen Icon Toggle Button */}
       <div className="fixed top-4 left-4 z-40">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={toggleMenu}
               className={cn(
-                "h-10 px-3 bg-background/90 backdrop-blur-sm border border-border shadow-lg",
+                "h-12 w-12 bg-background/90 backdrop-blur-sm border border-border shadow-lg",
                 "hover:bg-background/95 transition-all duration-200",
-                "text-sm font-semibold"
+                "rounded-full"
               )}
             >
               {isMenuVisible ? (
-                <X className="h-4 w-4 mr-2" />
+                <X className="h-5 w-5" />
               ) : (
-                <Menu className="h-4 w-4 mr-2" />
+                <Pen className="h-5 w-5" />
               )}
-              As I Need It Draw
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{isMenuVisible ? 'Hide Menu' : 'Show Menu'}</p>
+            <p>{isMenuVisible ? 'Hide Tools' : 'Show Tools'}</p>
           </TooltipContent>
         </Tooltip>
       </div>

@@ -4,7 +4,7 @@ import React from 'react';
 import { useDesign } from '@/context/design-context';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
-import { Trash2, Undo2, Palette, Settings, Zap, Eye, Move, PenTool, Download, X } from 'lucide-react';
+import { Trash2, Undo2, Palette, Settings, Zap, Eye, Move, PenTool, Download, X, Pen } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { Slider } from './ui/slider';
 import { Label } from './ui/label';
@@ -24,6 +24,7 @@ import { Input } from './ui/input';
 import { useState } from 'react';
 import type { GridUnit } from '@/lib/types';
 import { ExportMenu } from './export-menu';
+import { ModernColorPicker } from './modern-color-picker';
 
 const PROFESSIONAL_COLORS = [
   { name: 'White', value: '#FFFFFF', category: 'white' },
@@ -63,6 +64,7 @@ export function CollapsibleMenu({ isVisible, onClose }: CollapsibleMenuProps) {
   const activeLayer = layers.find(l => l.id === activeLayerId);
   const isLocked = activeLayer?.isLocked;
   const [customColor, setCustomColor] = useState(activeLayer?.color || '#FFFFFF');
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
   const handleStrokeWidthChange = (value: number[]) => {
     if (activeLayer) {
@@ -87,6 +89,13 @@ export function CollapsibleMenu({ isVisible, onClose }: CollapsibleMenuProps) {
     const color = e.target.value;
     setCustomColor(color);
     if (activeLayer && /^#[0-9A-F]{6}$/i.test(color)) {
+      updateActiveLayer({ color });
+    }
+  };
+
+  const handleColorPickerChange = (color: string) => {
+    setCustomColor(color);
+    if (activeLayer) {
       updateActiveLayer({ color });
     }
   };
@@ -219,79 +228,48 @@ export function CollapsibleMenu({ isVisible, onClose }: CollapsibleMenuProps) {
                 <Label className="text-sm font-medium">Color</Label>
               </div>
 
-              {/* Color Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full h-10 flex items-center gap-2"
-                    disabled={isLocked}
-                  >
-                    <div
-                      className="w-4 h-4 rounded border"
-                      style={{ backgroundColor: activeLayer?.color || '#FFFFFF' }}
-                    />
-                    <span className="text-xs font-mono">
-                      {activeLayer?.color || '#FFFFFF'}
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  {/* Custom Color Input */}
-                  <div className="p-3 border-b">
-                    <Label className="text-xs font-medium mb-2 block">Custom Color</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="color"
-                        value={customColor}
-                        onChange={handleCustomColorChange}
-                        className="w-12 h-8 p-1 border rounded"
-                        disabled={isLocked}
-                      />
-                      <Input
-                        type="text"
-                        value={customColor}
-                        onChange={handleCustomColorChange}
-                        placeholder="#FFFFFF"
-                        className="flex-1 text-xs font-mono"
-                        disabled={isLocked}
-                      />
-                    </div>
-                  </div>
+                             {/* Modern Color Picker Button */}
+               <Button
+                 variant="outline"
+                 className="w-full h-10 flex items-center gap-2"
+                 disabled={isLocked}
+                 onClick={() => setIsColorPickerOpen(true)}
+               >
+                 <div
+                   className="w-4 h-4 rounded border"
+                   style={{ backgroundColor: activeLayer?.color || '#FFFFFF' }}
+                 />
+                 <span className="text-xs font-mono">
+                   {activeLayer?.color || '#FFFFFF'}
+                 </span>
+               </Button>
 
-                  <DropdownMenuSeparator />
-
-                  {/* Color Presets */}
-                  <div className="p-3">
-                    <Label className="text-xs font-medium mb-2 block">Preset Colors</Label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {PROFESSIONAL_COLORS.map(color => (
-                        <Tooltip key={color.value}>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className={cn(
-                                "h-8 w-8 rounded border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                                activeLayer?.color === color.value
-                                  ? 'border-primary ring-2 ring-primary/20'
-                                  : 'border-border hover:border-primary/50',
-                                isLocked && 'cursor-not-allowed opacity-50'
-                              )}
-                              style={{ backgroundColor: color.value }}
-                              onClick={() => handleColorChange(color.value)}
-                              disabled={isLocked}
-                              aria-label={`Set color to ${color.name}`}
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{color.name}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      ))}
-                    </div>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+               {/* Color Presets */}
+               <div className="grid grid-cols-4 gap-2">
+                 {PROFESSIONAL_COLORS.map(color => (
+                   <Tooltip key={color.value}>
+                     <TooltipTrigger asChild>
+                       <button
+                         type="button"
+                         className={cn(
+                           "h-8 w-8 rounded border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                           activeLayer?.color === color.value
+                             ? 'border-primary ring-2 ring-primary/20'
+                             : 'border-border hover:border-primary/50',
+                           isLocked && 'cursor-not-allowed opacity-50'
+                         )}
+                         style={{ backgroundColor: color.value }}
+                         onClick={() => handleColorChange(color.value)}
+                         disabled={isLocked}
+                         aria-label={`Set color to ${color.name}`}
+                       />
+                     </TooltipTrigger>
+                     <TooltipContent>
+                       <p>{color.name}</p>
+                     </TooltipContent>
+                   </Tooltip>
+                 ))}
+               </div>
             </CardContent>
           </Card>
 
@@ -393,8 +371,16 @@ export function CollapsibleMenu({ isVisible, onClose }: CollapsibleMenuProps) {
               <ExportMenu />
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </div>
-  );
-}
+                 </div>
+       </div>
+
+       {/* Modern Color Picker Modal */}
+       <ModernColorPicker
+         color={activeLayer?.color || '#FFFFFF'}
+         onColorChange={handleColorPickerChange}
+         onClose={() => setIsColorPickerOpen(false)}
+         isOpen={isColorPickerOpen}
+       />
+     </div>
+   );
+ }
