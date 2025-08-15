@@ -214,32 +214,46 @@ export function GarmentCanvas() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Optimized scroll-to-zoom functionality
+  // Optimized scroll-to-zoom functionality with throttling
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let lastWheelTime = 0;
+    
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       
-      // Zoom with scroll wheel
-      const zoomFactor = -e.deltaY * 0.001;
-      const newScale = Math.max(0.1, Math.min(scale + zoomFactor, 5));
+      // Throttle zoom events for better performance (max 60fps)
+      const now = Date.now();
+      if (now - lastWheelTime < 16) return; // ~60fps limit
+      lastWheelTime = now;
       
-      if (newScale !== scale) {
-        // Calculate zoom center (mouse position)
-        const rect = canvasRef.current?.getBoundingClientRect();
-        if (rect) {
-          const mouseX = e.clientX - rect.left;
-          const mouseY = e.clientY - rect.top;
-          
-          // Calculate new offset to zoom towards mouse position
-          const scaleRatio = newScale / scale;
-          const newOffsetX = mouseX - (mouseX - canvasOffset.x) * scaleRatio;
-          const newOffsetY = mouseY - (mouseY - canvasOffset.y) * scaleRatio;
-          
-          setCanvasOffset({ x: newOffsetX, y: newOffsetY });
-        }
+      // Clear previous timeout
+      clearTimeout(timeoutId);
+      
+      // Debounce the actual zoom update
+      timeoutId = setTimeout(() => {
+        // Zoom with scroll wheel
+        const zoomFactor = -e.deltaY * 0.001;
+        const newScale = Math.max(0.1, Math.min(scale + zoomFactor, 5));
         
-        setScale(newScale);
-      }
+        if (newScale !== scale) {
+          // Calculate zoom center (mouse position)
+          const rect = canvasRef.current?.getBoundingClientRect();
+          if (rect) {
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // Calculate new offset to zoom towards mouse position
+            const scaleRatio = newScale / scale;
+            const newOffsetX = mouseX - (mouseX - canvasOffset.x) * scaleRatio;
+            const newOffsetY = mouseY - (mouseY - canvasOffset.y) * scaleRatio;
+            
+            setCanvasOffset({ x: newOffsetX, y: newOffsetY });
+          }
+          
+          setScale(newScale);
+        }
+      }, 16); // ~60fps debouncing
     };
     
     const currentCanvasRef = canvasRef.current;
