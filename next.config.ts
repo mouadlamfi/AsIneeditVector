@@ -28,15 +28,15 @@ const nextConfig: NextConfig = {
   compress: true,
   // Enable static optimization
   reactStrictMode: true,
-  // Optimize bundle size
+  // Optimize bundle size and ensure path resolution
   webpack: (config, { dev, isServer }) => {
-    if (!dev && !isServer) {
-      // Optimize Three.js imports
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'three': 'three',
-      };
-    }
+    // Ensure path aliases work correctly
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname, 'src'),
+      'three': 'three',
+    };
+    
     return config;
   },
   // Performance optimizations
