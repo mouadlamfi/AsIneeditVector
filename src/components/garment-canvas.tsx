@@ -129,14 +129,13 @@ type TransformMode = 'move' | 'rotate' | 'resize' | null;
 type CanvasMode = 'draw' | 'pan';
 
 export function GarmentCanvas() {
-  const { layers, activeLayerId, addPoint, removeLastPoint, updatePoint, scale, setScale, zoomIn, zoomOut, detachLine, isSymmetryEnabled, measurement, setMeasurement, gridUnit, updateActiveLayer } = useDesign();
+  const { layers, activeLayerId, addPoint, removeLastPoint, updatePoint, scale, setScale, zoomIn, zoomOut, detachLine, isSymmetryEnabled, measurement, setMeasurement, gridUnit, updateActiveLayer, canvasMode, setCanvasMode } = useDesign();
   const mobileOpt = useMobileOptimization();
   const canvasRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [draggingPointIndex, setDraggingPointIndex] = useState<number | null>(null);
   const [currentMousePosition, setCurrentMousePosition] = useState<Point | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  const [canvasMode, setCanvasMode] = useState<CanvasMode>('draw');
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState<{ x: number, y: number } | null>(null);
   const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
