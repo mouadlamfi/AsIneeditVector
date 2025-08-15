@@ -103,7 +103,8 @@ export function PerformanceOptimizer({ children }: PerformanceOptimizerProps) {
             console.log('LCP:', entry.startTime);
           }
           if (entry.entryType === 'first-input') {
-            console.log('FID:', entry.processingStart - entry.startTime);
+            const firstInputEntry = entry as any;
+            console.log('FID:', firstInputEntry.processingStart - firstInputEntry.startTime);
           }
         }
       });

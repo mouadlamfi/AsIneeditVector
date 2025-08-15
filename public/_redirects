@@ -1,0 +1,15 @@
+# Netlify redirects for SPA routing
+/*    /index.html   200
+
+# Redirect old routes to new ones
+/art/    /art/index.html   200
+
+# Handle API routes (if any)
+/api/*    /api/index.html   200
+
+# Security headers
+/*
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

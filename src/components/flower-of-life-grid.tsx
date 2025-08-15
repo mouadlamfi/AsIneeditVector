@@ -43,7 +43,7 @@ class FlowerOfLifeGeometry {
     return this.radius;
   }
 
-  // Calculate the centers of all Flower of Life motifs in a grid
+  // Calculate the centers of all Flower of Life motifs in a grid with performance optimization
   getMotifCenters(viewportBounds: { minX: number; minY: number; maxX: number; maxY: number }) {
     const centers: Array<{ x: number; y: number }> = [];
     
@@ -51,17 +51,23 @@ class FlowerOfLifeGeometry {
     const horizontalSpacing = this.radius * 2;
     const verticalSpacing = this.radius * Math.sqrt(3);
 
-    // Calculate the range of visible motifs
-    const startX = Math.floor((viewportBounds.minX - this.radius) / horizontalSpacing) * horizontalSpacing;
-    const endX = Math.ceil((viewportBounds.maxX + this.radius) / horizontalSpacing) * horizontalSpacing;
-    const startY = Math.floor((viewportBounds.minY - this.radius) / verticalSpacing) * verticalSpacing;
-    const endY = Math.ceil((viewportBounds.maxY + this.radius) / verticalSpacing) * verticalSpacing;
+    // Calculate the range of visible motifs with padding
+    const padding = this.radius * 2; // Add padding to prevent edge artifacts
+    const startX = Math.floor((viewportBounds.minX - padding) / horizontalSpacing) * horizontalSpacing;
+    const endX = Math.ceil((viewportBounds.maxX + padding) / horizontalSpacing) * horizontalSpacing;
+    const startY = Math.floor((viewportBounds.minY - padding) / verticalSpacing) * verticalSpacing;
+    const endY = Math.ceil((viewportBounds.maxY + padding) / verticalSpacing) * verticalSpacing;
 
-    for (let y = startY; y <= endY; y += verticalSpacing) {
+    // Performance limit to prevent excessive rendering
+    const maxMotifs = 200; // Limit for performance
+    let motifCount = 0;
+
+    for (let y = startY; y <= endY && motifCount < maxMotifs; y += verticalSpacing) {
       // Alternate horizontal offset for hexagonal packing
       const rowOffsetX = (Math.round(y / verticalSpacing) % 2 === 0) ? 0 : this.radius;
-      for (let x = startX + rowOffsetX; x <= endX; x += horizontalSpacing) {
+      for (let x = startX + rowOffsetX; x <= endX && motifCount < maxMotifs; x += horizontalSpacing) {
         centers.push({ x, y });
+        motifCount++;
       }
     }
 
@@ -190,12 +196,20 @@ export const FlowerOfLifeGrid: React.FC<FlowerOfLifeGridProps> = React.memo(({
     const elements: JSX.Element[] = [];
     const motifCenters = geometry.getMotifCenters(viewportBounds);
     
-    // Render all circles
+    // Performance optimization: limit the number of rendered elements
+    const maxElements = 1000; // Limit for performance
+    let elementCount = 0;
+    
+    // Render circles with performance optimization
     motifCenters.forEach((center, index) => {
+      if (elementCount >= maxElements) return;
+      
       const circles = geometry.getMotifCircles(center.x, center.y);
       
       circles.forEach((circle, circleIndex) => {
-        // Check if circle is visible in viewport
+        if (elementCount >= maxElements) return;
+        
+        // Check if circle is visible in viewport with optimized bounds checking
         const isVisible = 
           circle.cx + circle.r > viewportBounds.minX &&
           circle.cx - circle.r < viewportBounds.maxX &&
@@ -210,26 +224,31 @@ export const FlowerOfLifeGrid: React.FC<FlowerOfLifeGridProps> = React.memo(({
               cy={circle.cy}
               r={circle.r}
               stroke="#FFFFFF"
-              strokeWidth={0.5 / scale}
+              strokeWidth={Math.max(0.5 / scale, 0.1)} // Minimum stroke width
               fill="none"
               opacity="0.3"
               className="flower-of-life-circle"
             />
           );
+          elementCount++;
         }
       });
     });
 
-    // Render intersection points with glow effect
+    // Render intersection points with glow effect (limited for performance)
     const intersections = geometry.getAllIntersectionPoints(viewportBounds);
-    intersections.forEach((point, index) => {
+    const maxIntersections = Math.min(intersections.length, 200); // Limit intersection points
+    
+    intersections.slice(0, maxIntersections).forEach((point, index) => {
+      if (elementCount >= maxElements) return;
+      
       elements.push(
         <g key={`fol-intersection-${index}`}>
           {/* Glow effect */}
           <circle
             cx={point.x}
             cy={point.y}
-            r={4 / scale}
+            r={Math.max(4 / scale, 1)} // Minimum glow radius
             fill="url(#glowGradient)"
             opacity="0.6"
             className="flower-of-life-glow"
@@ -238,13 +257,14 @@ export const FlowerOfLifeGrid: React.FC<FlowerOfLifeGridProps> = React.memo(({
           <circle
             cx={point.x}
             cy={point.y}
-            r={1 / scale}
+            r={Math.max(1 / scale, 0.5)} // Minimum point radius
             fill="#FFFFFF"
             opacity="0.9"
             className="flower-of-life-point"
           />
         </g>
       );
+      elementCount++;
     });
 
     return elements;

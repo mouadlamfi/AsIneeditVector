@@ -1,112 +1,104 @@
-import React, { useEffect, useState } from 'react';
-import { Badge } from './ui/badge';
+"use client";
 
-interface PerformanceMetrics {
-  fps: number;
-  memoryUsage: number;
-  renderTime: number;
-  bundleSize: number;
-}
+import { useEffect, useRef } from 'react';
 
 interface PerformanceMonitorProps {
   enabled?: boolean;
-  showDebugInfo?: boolean;
 }
 
-export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({ 
-  enabled = process.env.NODE_ENV === 'development',
-  showDebugInfo = false 
-}) => {
-  const [metrics, setMetrics] = useState<PerformanceMetrics>({
-    fps: 0,
-    memoryUsage: 0,
-    renderTime: 0,
-    bundleSize: 0,
-  });
+export function PerformanceMonitor({ enabled = process.env.NODE_ENV === 'development' }: PerformanceMonitorProps) {
+  const frameCountRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const fpsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!enabled) return;
 
-    let frameCount = 0;
-    let lastTime = performance.now();
-    let animationFrame: number;
+    let animationId: number;
 
-    const measurePerformance = () => {
-      frameCount++;
-      const currentTime = performance.now();
+    const measureFPS = (currentTime: number) => {
+      frameCountRef.current++;
       
-      // Calculate FPS every second
-      if (currentTime - lastTime >= 1000) {
-        const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
+      if (currentTime - lastTimeRef.current >= 1000) {
+        const fps = Math.round((frameCountRef.current * 1000) / (currentTime - lastTimeRef.current));
         
-        // Get memory usage (if available)
-        const memoryUsage = (performance as any).memory 
-          ? Math.round((performance as any).memory.usedJSHeapSize / 1024 / 1024)
-          : 0;
-
-        setMetrics(prev => ({
-          ...prev,
-          fps,
-          memoryUsage,
-          renderTime: currentTime - lastTime,
-        }));
-
-        frameCount = 0;
-        lastTime = currentTime;
+        if (fpsRef.current) {
+          fpsRef.current.textContent = `FPS: ${fps}`;
+          fpsRef.current.style.color = fps >= 50 ? '#10B981' : fps >= 30 ? '#F59E0B' : '#EF4444';
+        }
+        
+        frameCountRef.current = 0;
+        lastTimeRef.current = currentTime;
       }
-
-      animationFrame = requestAnimationFrame(measurePerformance);
+      
+      animationId = requestAnimationFrame(measureFPS);
     };
 
-    measurePerformance();
+    // Monitor Core Web Vitals
+    if ('performance' in window) {
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          switch (entry.entryType) {
+            case 'largest-contentful-paint':
+              console.log('🚀 LCP:', Math.round(entry.startTime), 'ms');
+              break;
+            case 'first-input':
+              const firstInputEntry = entry as PerformanceEventTiming;
+              console.log('⚡ FID:', Math.round(firstInputEntry.processingStart - firstInputEntry.startTime), 'ms');
+              break;
+            case 'layout-shift':
+              const layoutShiftEntry = entry as any;
+              console.log('📐 CLS:', Math.round(layoutShiftEntry.value * 1000) / 1000);
+              break;
+          }
+        }
+      });
+
+      observer.observe({ 
+        entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] 
+      });
+
+      // Monitor memory usage
+      if ('memory' in performance) {
+        setInterval(() => {
+          const memory = (performance as any).memory;
+          console.log('💾 Memory:', {
+            used: Math.round(memory.usedJSHeapSize / 1024 / 1024) + 'MB',
+            total: Math.round(memory.totalJSHeapSize / 1024 / 1024) + 'MB',
+            limit: Math.round(memory.jsHeapSizeLimit / 1024 / 1024) + 'MB'
+          });
+        }, 5000);
+      }
+
+      // Monitor network performance
+      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+      if (navigation) {
+        console.log('🌐 Network Performance:', {
+          dns: Math.round(navigation.domainLookupEnd - navigation.domainLookupStart) + 'ms',
+          tcp: Math.round(navigation.connectEnd - navigation.connectStart) + 'ms',
+          ttfb: Math.round(navigation.responseStart - navigation.requestStart) + 'ms',
+          domLoad: Math.round(navigation.domContentLoadedEventEnd - navigation.fetchStart) + 'ms',
+          windowLoad: Math.round(navigation.loadEventEnd - navigation.fetchStart) + 'ms'
+        });
+      }
+    }
+
+    // Start FPS monitoring
+    animationId = requestAnimationFrame(measureFPS);
 
     return () => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
+      if (animationId) {
+        cancelAnimationFrame(animationId);
       }
     };
   }, [enabled]);
 
-  // Performance optimization suggestions
-  const getOptimizationSuggestions = () => {
-    const suggestions = [];
-    
-    if (metrics.fps < 30) {
-      suggestions.push('Low FPS detected - consider reducing SVG complexity');
-    }
-    
-    if (metrics.memoryUsage > 100) {
-      suggestions.push('High memory usage - check for memory leaks');
-    }
-    
-    return suggestions;
-  };
-
-  if (!enabled || !showDebugInfo) return null;
+  if (!enabled) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 p-3 bg-black/80 text-white rounded-lg backdrop-blur-sm">
-      <div className="flex flex-col gap-2 text-xs">
-        <div className="flex items-center gap-2">
-          <span>FPS:</span>
-          <Badge variant={metrics.fps > 45 ? 'secondary' : metrics.fps > 30 ? 'outline' : 'destructive'}>
-            {metrics.fps}
-          </Badge>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <span>Memory:</span>
-          <Badge variant={metrics.memoryUsage < 50 ? 'secondary' : 'outline'}>
-            {metrics.memoryUsage}MB
-          </Badge>
-        </div>
-        
-        {getOptimizationSuggestions().map((suggestion, index) => (
-          <div key={index} className="text-yellow-400 text-xs">
-            ⚠ {suggestion}
-          </div>
-        ))}
-      </div>
+    <div className="fixed top-4 right-4 z-50 bg-black/80 text-white px-3 py-2 rounded text-sm font-mono">
+      <div ref={fpsRef}>FPS: --</div>
+      <div>Build: {process.env.NODE_ENV}</div>
     </div>
   );
-};
+}

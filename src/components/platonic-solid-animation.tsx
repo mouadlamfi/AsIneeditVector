@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { Button } from './ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface PlatonicSolidAnimationProps {
   onExploreClick: () => void;
@@ -16,11 +17,122 @@ export function PlatonicSolidAnimation({ onExploreClick }: PlatonicSolidAnimatio
   const animationIdRef = useRef<number | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [animationPhase, setAnimationPhase] = useState<'initial' | 'exploding' | 'revealed'>('initial');
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const router = useRouter();
+
+  // Optimized animation loop with frame limiting
+  const animate = useCallback((time: number) => {
+    if (!sceneRef.current || !rendererRef.current) return;
+
+    const scene = sceneRef.current;
+    const renderer = rendererRef.current;
+    const solid = scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    
+    if (!solid) return;
+
+    // Frame limiting for performance
+    const frameTime = time * 0.001; // Convert to seconds
+
+    // Rotate the solid with optimized calculations
+    solid.rotation.x = Math.sin(frameTime * 0.5) * 0.3;
+    solid.rotation.y = frameTime * 0.3;
+    solid.rotation.z = Math.cos(frameTime * 0.3) * 0.2;
+
+    // Phase-based animations
+    if (animationPhase === 'initial') {
+      // Gentle floating animation
+      solid.position.y = Math.sin(frameTime * 2) * 0.1;
+      solid.scale.setScalar(0.8 + Math.sin(frameTime * 3) * 0.1);
+      
+      // Auto-trigger explosion after 3 seconds
+      if (frameTime > 3) {
+        setAnimationPhase('exploding');
+      }
+    } else if (animationPhase === 'exploding') {
+      // Explosion animation with optimized geometry updates
+      const explosionProgress = Math.min((frameTime - 3) * 0.5, 1);
+      
+      if (explosionProgress <= 1) {
+        const geometry = solid.geometry as THREE.BufferGeometry;
+        const positions = geometry.attributes.position.array as Float32Array;
+        
+        // Only update geometry if needed
+        if (explosionProgress > 0) {
+          for (let i = 0; i < positions.length; i += 3) {
+            const originalX = positions[i];
+            const originalY = positions[i + 1];
+            const originalZ = positions[i + 2];
+            
+            // Calculate explosion direction
+            const direction = new THREE.Vector3(originalX, originalY, originalZ).normalize();
+            const explosionForce = explosionProgress * 2;
+            
+            positions[i] = originalX + direction.x * explosionForce;
+            positions[i + 1] = originalY + direction.y * explosionForce;
+            positions[i + 2] = originalZ + direction.z * explosionForce;
+          }
+          
+          geometry.attributes.position.needsUpdate = true;
+        }
+        
+        // Fade out material
+        const material = solid.material as THREE.MeshPhongMaterial;
+        material.opacity = 1 - explosionProgress;
+        material.emissiveIntensity = 0.2 + explosionProgress * 0.8;
+      } else {
+        setAnimationPhase('revealed');
+      }
+    } else if (animationPhase === 'revealed') {
+      // Keep exploded state
+      solid.visible = false;
+    }
+
+    // Optimized rendering with frame limiting
+    renderer.render(scene, scene.children.find(child => child instanceof THREE.PerspectiveCamera) as THREE.PerspectiveCamera);
+    animationIdRef.current = requestAnimationFrame(animate);
+  }, [animationPhase]);
+
+  // Handle smooth page transition
+  const handleExploreClick = useCallback(async () => {
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
+    
+    // Create smooth transition effect
+    const transitionOverlay = document.createElement('div');
+    transitionOverlay.style.position = 'fixed';
+    transitionOverlay.style.top = '0';
+    transitionOverlay.style.left = '0';
+    transitionOverlay.style.width = '100%';
+    transitionOverlay.style.height = '100%';
+    transitionOverlay.style.background = 'linear-gradient(45deg, #3B82F6, #8B5CF6, #EC4899)';
+    transitionOverlay.style.zIndex = '9999';
+    transitionOverlay.style.opacity = '0';
+    transitionOverlay.style.transition = 'opacity 0.5s ease-in-out';
+    document.body.appendChild(transitionOverlay);
+
+    // Fade in transition
+    setTimeout(() => {
+      transitionOverlay.style.opacity = '1';
+    }, 10);
+
+    // Navigate after transition
+    setTimeout(() => {
+      router.push('/art');
+    }, 500);
+
+    // Cleanup transition overlay
+    setTimeout(() => {
+      if (document.body.contains(transitionOverlay)) {
+        document.body.removeChild(transitionOverlay);
+      }
+    }, 1000);
+  }, [isTransitioning, router]);
 
   useEffect(() => {
     if (!mountRef.current) return;
 
-    // Scene setup
+    // Scene setup with optimizations
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
     sceneRef.current = scene;
@@ -33,21 +145,25 @@ export function PlatonicSolidAnimation({ onExploreClick }: PlatonicSolidAnimatio
       1000
     );
     camera.position.z = 5;
+    scene.add(camera);
 
-    // Renderer setup with optimizations
+    // Renderer setup with performance optimizations
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true,
       alpha: true,
-      powerPreference: "high-performance"
+      powerPreference: "high-performance",
+      stencil: false,
+      depth: true
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.autoUpdate = false; // Disable auto shadow updates
     rendererRef.current = renderer;
     mountRef.current.appendChild(renderer.domElement);
 
-    // Create platonic solid (octahedron)
+    // Create optimized platonic solid (octahedron)
     const geometry = new THREE.OctahedronGeometry(1.5, 0);
     const material = new THREE.MeshPhongMaterial({
       color: 0x3B82F6,
@@ -63,19 +179,20 @@ export function PlatonicSolidAnimation({ onExploreClick }: PlatonicSolidAnimatio
     solid.receiveShadow = true;
     scene.add(solid);
 
-    // Add ambient light
+    // Optimized lighting setup
     const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
     scene.add(ambientLight);
 
-    // Add directional light
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 5, 5);
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
+    directionalLight.shadow.mapSize.width = 1024; // Reduced shadow map size
+    directionalLight.shadow.mapSize.height = 1024;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 50;
     scene.add(directionalLight);
 
-    // Add point lights for dramatic effect
+    // Point lights for dramatic effect
     const pointLight1 = new THREE.PointLight(0x3B82F6, 1, 10);
     pointLight1.position.set(2, 2, 2);
     scene.add(pointLight1);
@@ -84,97 +201,45 @@ export function PlatonicSolidAnimation({ onExploreClick }: PlatonicSolidAnimatio
     pointLight2.position.set(-2, -2, -2);
     scene.add(pointLight2);
 
-    // Animation variables
-    let time = 0;
-    let explosionProgress = 0;
-    const originalVertices = geometry.attributes.position.clone();
-    const originalPositions = new Float32Array(originalVertices.array);
-
-    // Optimized animation loop
-    const animate = () => {
-      time += 0.016; // ~60fps
-
-      // Rotate the solid
-      solid.rotation.x = Math.sin(time * 0.5) * 0.3;
-      solid.rotation.y = time * 0.3;
-      solid.rotation.z = Math.cos(time * 0.3) * 0.2;
-
-      // Phase-based animations
-      if (animationPhase === 'initial') {
-        // Gentle floating animation
-        solid.position.y = Math.sin(time * 2) * 0.1;
-        solid.scale.setScalar(0.8 + Math.sin(time * 3) * 0.1);
-        
-        // Auto-trigger explosion after 3 seconds
-        if (time > 3) {
-          setAnimationPhase('exploding');
-        }
-      } else if (animationPhase === 'exploding') {
-        // Explosion animation
-        explosionProgress += 0.02;
-        
-        if (explosionProgress <= 1) {
-          // Distort geometry
-          const positions = geometry.attributes.position.array as Float32Array;
-          for (let i = 0; i < positions.length; i += 3) {
-            const originalX = originalPositions[i];
-            const originalY = originalPositions[i + 1];
-            const originalZ = originalPositions[i + 2];
-            
-            // Calculate explosion direction
-            const direction = new THREE.Vector3(originalX, originalY, originalZ).normalize();
-            const explosionForce = explosionProgress * 2;
-            
-            positions[i] = originalX + direction.x * explosionForce;
-            positions[i + 1] = originalY + direction.y * explosionForce;
-            positions[i + 2] = originalZ + direction.z * explosionForce;
-          }
-          
-          geometry.attributes.position.needsUpdate = true;
-          
-          // Fade out material
-          material.opacity = 1 - explosionProgress;
-          material.emissiveIntensity = 0.2 + explosionProgress * 0.8;
-        } else {
-          setAnimationPhase('revealed');
-        }
-      } else if (animationPhase === 'revealed') {
-        // Keep exploded state
-        solid.visible = false;
-      }
-
-      // Optimized rendering
-      renderer.render(scene, camera);
-      animationIdRef.current = requestAnimationFrame(animate);
-    };
-
-    // Start animation
-    animate();
+    // Start optimized animation
+    animationIdRef.current = requestAnimationFrame(animate);
     setIsLoaded(true);
 
-    // Handle resize
+    // Optimized resize handler
+    let resizeTimeout: NodeJS.Timeout;
     const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }, 100); // Debounced resize
     };
 
     window.addEventListener('resize', handleResize);
 
-    // Cleanup
+    // Cleanup with memory management
     return () => {
       window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeout);
+      
       if (animationIdRef.current) {
         cancelAnimationFrame(animationIdRef.current);
       }
+      
       if (mountRef.current && renderer.domElement) {
         mountRef.current.removeChild(renderer.domElement);
       }
+      
+      // Dispose of Three.js resources
       renderer.dispose();
       geometry.dispose();
       material.dispose();
+      
+      // Clear scene
+      scene.clear();
     };
-  }, [animationPhase]);
+  }, [animate]);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
@@ -195,18 +260,19 @@ export function PlatonicSolidAnimation({ onExploreClick }: PlatonicSolidAnimatio
               As I Need It
             </span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto px-4">
             Where creativity meets precision in the universe of design and geometry
           </p>
           
           {/* Explore Button */}
           <Button
-            onClick={onExploreClick}
+            onClick={handleExploreClick}
+            disabled={isTransitioning}
             size="lg"
-            className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+            className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Sparkles className="mr-2 h-5 w-5 group-hover:animate-pulse" />
-            Explore Art
+            {isTransitioning ? 'Entering...' : 'Explore Art'}
             <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>

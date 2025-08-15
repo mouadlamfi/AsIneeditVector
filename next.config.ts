@@ -5,12 +5,20 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: 'export',
+  trailingSlash: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'placehold.co',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
         port: '',
         pathname: '/**',
       },
@@ -24,6 +32,20 @@ const nextConfig: NextConfig = {
   compress: true,
   // Enable static optimization
   reactStrictMode: true,
+  // Optimize bundle size
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      // Optimize Three.js imports
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'three': 'three',
+      };
+    }
+    return config;
+  },
+  // Performance optimizations
+  poweredByHeader: false,
+  generateEtags: false,
 };
 
 export default withBundleAnalyzer(nextConfig);

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { PerformanceOptimizer } from '@/components/performance-optimizer';
+import { PerformanceMonitor } from '@/components/performance-monitor';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -61,6 +62,7 @@ export default function RootLayout({
         <PerformanceOptimizer>
           {children}
         </PerformanceOptimizer>
+        <PerformanceMonitor />
       </body>
     </html>
   );

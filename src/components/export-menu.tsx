@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useDesign } from '@/context/design-context';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
-import { Download, FileText, Image, FileImage, FilePdf, Settings } from 'lucide-react';
+import { Download, FileText, Image, FileImage, Settings } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -369,7 +369,7 @@ export function ExportMenu() {
               onClick={() => exportDesign('pdf')}
               disabled={isExporting}
             >
-              <FilePdf className="h-4 w-4" />
+              <FileText className="h-4 w-4" />
               PDF
             </Button>
 
