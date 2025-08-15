@@ -47,7 +47,7 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
   const [layers, setLayers] = useState<Layer[]>([initialLayer]);
   const [activeLayerId, setActiveLayerId] = useState<string | null>(initialLayer.id);
   const [scale, setScale] = useState(1);
-  const [isSymmetryEnabled, setIsSymmetryEnabled] = useState(true);
+  const [isSymmetryEnabled, setIsSymmetryEnabled] = useState(false);
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const [gridUnit, setGridUnit] = useState<GridUnit>('inch');
 

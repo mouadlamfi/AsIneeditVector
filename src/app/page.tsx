@@ -557,6 +557,8 @@ function StatusIndicator() {
 }
 
 export default function Home() {
+  const [menusVisible, setMenusVisible] = useState(false);
+  const [symmetryEnabled, setSymmetryEnabled] = useState(false);
   return (
     <DesignProvider>
       <TooltipProvider>
@@ -564,8 +566,8 @@ export default function Home() {
           {/* Enhanced Header */}
           <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card/80 backdrop-blur-sm px-6 shadow-sm glass">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setMenusVisible(!menusVisible)}>
+                <div className={`p-2 rounded-lg bg-primary/10 border border-primary/20 transition-transform duration-300 ${menusVisible ? '' : 'rotate-180'}`}>
                   <PenTool className="h-5 w-5 text-primary" />
                 </div>
                 <div>
@@ -577,14 +579,16 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
+            {/* This div contains the elements to be hidden */}
+            <div className={`flex items-center gap-4 transition-all duration-300 ${menusVisible ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
               <StatusIndicator />
-              <Separator orientation="vertical" className="h-6" />
+ <Separator orientation="vertical" className="h-6" />
+              {/* This div contains the icons and Export button */}
               <div className="flex items-center gap-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <HelpCircle className="h-4 w-4" />
+ <HelpCircle className={`h-4 w-4 ${menusVisible ? '' : 'pointer-events-none'}`} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -595,7 +599,7 @@ export default function Home() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Settings className="h-4 w-4" />
+ <Settings className={`h-4 w-4 ${menusVisible ? '' : 'pointer-events-none'}`} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -611,7 +615,7 @@ export default function Home() {
           {/* Enhanced Main Layout */}
           <div className="flex flex-1 overflow-hidden">
             {/* Enhanced Sidebar */}
-            <aside className="w-80 shrink-0 sidebar-enhanced p-6 flex flex-col gap-6 overflow-y-auto panel-transition">
+            <aside className={`shrink-0 sidebar-enhanced p-6 flex flex-col gap-6 overflow-y-auto panel-transition ${menusVisible ? 'w-80 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
               <div className="space-y-6">
                 {/* Tools Section */}
                 <div className="space-y-4">

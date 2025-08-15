@@ -1,3 +1,16 @@
-.custom-cursor-thin {
-    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='5' x2='12' y2='19'></line><line x1='5' y1='12' x2='19' y2='12'></line></svg>") 12 12, crosshair;
+.custom-cursor-thin { cursor: crosshair; }
+
+/* Style for the custom cursor element */
+.firefly-cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 20px; /* Size of the firefly */
+    height: 20px;
+    background: radial-gradient(circle, rgba(255, 255, 150, 0.8) 0%, rgba(255, 255, 150, 0.0) 80%); /* Soft light effect */
+    border-radius: 50%; /* Make it round */
+    pointer-events: none; /* Don't interfere with mouse events */
+    transform: translate(-50%, -50%); /* Center the cursor */
+    z-index: 9999; /* Ensure it's on top */
+    transition: transform 0.1s ease-out; /* Smooth movement */
 }
