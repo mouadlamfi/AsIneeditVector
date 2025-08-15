@@ -1,9 +1,5 @@
 import type {NextConfig} from 'next';
 
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-});
-
 const nextConfig: NextConfig = {
   output: 'export',
   trailingSlash: true,
@@ -48,4 +44,7 @@ const nextConfig: NextConfig = {
   generateEtags: false,
 };
 
-export default withBundleAnalyzer(nextConfig);
+// Conditionally apply bundle analyzer only when ANALYZE is true
+export default process.env.ANALYZE === 'true' 
+  ? require('@next/bundle-analyzer')({ enabled: true })(nextConfig)
+  : nextConfig;
