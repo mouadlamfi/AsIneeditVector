@@ -12,7 +12,9 @@ interface DesignContextState {
   isSymmetryEnabled: boolean;
   measurement: Measurement | null;
   gridUnit: GridUnit;
+  canvasMode: 'draw' | 'pan';
   setGridUnit: (unit: GridUnit) => void;
+  setCanvasMode: (mode: 'draw' | 'pan') => void;
   setMeasurement: (measurement: Measurement | null) => void;
   toggleSymmetry: () => void;
   addLayer: (existingLayer?: Layer) => void;
@@ -50,6 +52,7 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
   const [isSymmetryEnabled, setIsSymmetryEnabled] = useState(true);
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const [gridUnit, setGridUnit] = useState<GridUnit>('inch');
+  const [canvasMode, setCanvasMode] = useState<'draw' | 'pan'>('draw');
 
   const toggleSymmetry = useCallback(() => setIsSymmetryEnabled(prev => !prev), []);
   const zoomIn = useCallback(() => setScale(s => Math.min(s + 0.1, 5)), []);
@@ -249,7 +252,9 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
         isSymmetryEnabled,
         measurement,
         gridUnit,
+        canvasMode,
         setGridUnit,
+        setCanvasMode,
         setMeasurement,
         toggleSymmetry,
         addLayer,
