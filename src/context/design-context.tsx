@@ -3,7 +3,14 @@
 
 import type { Point, Layer, Measurement, GridUnit } from '@/lib/types';
 import React, { createContext, useCallback, useContext, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+// Simple UUID generator for better compatibility
+const generateId = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 
 interface DesignContextState {
   layers: Layer[];
@@ -88,7 +95,7 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
 
   const addLayer = useCallback((existingLayer?: Layer) => {
     const newLayer: Layer = existingLayer || {
-      id: uuidv4(),
+      id: generateId(),
       name: `Layer ${layers.length + 1}`,
       points: [],
       strokeWidth: 1,
