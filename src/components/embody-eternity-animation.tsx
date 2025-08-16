@@ -269,7 +269,7 @@ export function EmbodyEternityAnimation({ onTakeMeIn }: EmbodyEternityAnimationP
       />
       
       {/* Frame - Top Section */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-8">
+      <div className="absolute top-0 left-0 right-0 z-[9999] p-8">
         <div className="flex justify-between items-start">
           <div className="text-white">
             <h1 className="text-2xl frame-title">EMBODY ETERNITY</h1>
@@ -283,14 +283,14 @@ export function EmbodyEternityAnimation({ onTakeMeIn }: EmbodyEternityAnimationP
       </div>
 
       {/* Main Content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+      <div className="absolute inset-0 flex flex-col items-center justify-center z-[9999]">
         {/* Take me in button */}
         <div className="mb-8">
           <Button
             onClick={handleTakeMeIn}
             disabled={isTransitioning}
             size="lg"
-            className="group content-button px-8 py-4 text-lg rounded-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative z-20"
+            className="group content-button px-8 py-4 text-lg rounded-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative"
             style={{ pointerEvents: 'auto' }}
           >
             {isTransitioning ? 'EXPLODING...' : 'TAKE ME IN'}

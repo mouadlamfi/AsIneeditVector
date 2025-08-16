@@ -21,7 +21,7 @@ function ArtApp() {
   return (
     <div className="h-screen w-screen bg-black overflow-hidden">
       {/* Home Button */}
-      <div className="fixed top-4 right-4 z-40">
+      <div className="fixed top-4 right-4 z-[9999]">
         <Tooltip>
           <TooltipTrigger asChild>
             <Link href="/">
@@ -33,6 +33,7 @@ function ArtApp() {
                   "hover:bg-background/95 transition-all duration-200",
                   "rounded-full"
                 )}
+                style={{ pointerEvents: 'auto' }}
               >
                 <Home className="h-5 w-5" />
               </Button>
@@ -45,19 +46,20 @@ function ArtApp() {
       </div>
 
       {/* Pen Icon Toggle Button */}
-      <div className="fixed top-4 left-4 z-40">
+      <div className="fixed top-4 left-4 z-[9999]">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleMenu}
-              className={cn(
-                "h-12 w-12 bg-background/90 backdrop-blur-sm border border-border shadow-lg",
-                "hover:bg-background/95 transition-all duration-200",
-                "rounded-full"
-              )}
-            >
+                          <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleMenu}
+                className={cn(
+                  "h-12 w-12 bg-background/90 backdrop-blur-sm border border-border shadow-lg",
+                  "hover:bg-background/95 transition-all duration-200",
+                  "rounded-full"
+                )}
+                style={{ pointerEvents: 'auto' }}
+              >
               {isMenuVisible ? (
                 <X className="h-5 w-5" />
               ) : (
