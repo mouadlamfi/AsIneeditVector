@@ -2,16 +2,16 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { SingularityHomepage } from '@/components/singularity-homepage';
+import { HomepageIntegration } from '@/components/homepage-integration';
 
 export default function HomePage() {
   const router = useRouter();
 
-  const handleTakeMeIn = () => {
+  const handleEnterApp = () => {
     router.push('/art');
   };
 
-  return <SingularityHomepage onTakeMeIn={handleTakeMeIn} />;
+  return <HomepageIntegration onEnterApp={handleEnterApp} />;
 }
 
     
