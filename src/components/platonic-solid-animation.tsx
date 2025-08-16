@@ -160,6 +160,14 @@ export function PlatonicSolidAnimation({ onExploreClick }: PlatonicSolidAnimatio
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.shadowMap.autoUpdate = false; // Disable auto shadow updates
+    
+    // Ensure canvas doesn't block pointer events
+    renderer.domElement.style.pointerEvents = 'none';
+    renderer.domElement.style.position = 'absolute';
+    renderer.domElement.style.top = '0';
+    renderer.domElement.style.left = '0';
+    renderer.domElement.style.zIndex = '0';
+    
     rendererRef.current = renderer;
     mountRef.current.appendChild(renderer.domElement);
 
@@ -243,11 +251,15 @@ export function PlatonicSolidAnimation({ onExploreClick }: PlatonicSolidAnimatio
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
-      {/* Three.js Canvas */}
-      <div ref={mountRef} className="absolute inset-0" />
+      {/* Three.js Canvas - Background Layer */}
+      <div 
+        ref={mountRef} 
+        className="absolute inset-0 pointer-events-none" 
+        style={{ zIndex: 0 }}
+      />
       
-      {/* Overlay Content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+      {/* Overlay Content - Interactive Layer */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ zIndex: 10 }}>
         {/* Brand Name */}
         <div className={cn(
           "text-center transition-all duration-1000 ease-out",
@@ -269,7 +281,8 @@ export function PlatonicSolidAnimation({ onExploreClick }: PlatonicSolidAnimatio
             onClick={handleExploreClick}
             disabled={isTransitioning}
             size="lg"
-            className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed relative z-20"
+            style={{ pointerEvents: 'auto' }}
           >
             <Sparkles className="mr-2 h-5 w-5 group-hover:animate-pulse" />
             {isTransitioning ? 'Entering...' : 'Explore Art'}
@@ -287,7 +300,7 @@ export function PlatonicSolidAnimation({ onExploreClick }: PlatonicSolidAnimatio
 
       {/* Particle Effects */}
       {animationPhase === 'exploding' && (
-        <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
           {Array.from({ length: 20 }).map((_, i) => (
             <div
               key={i}
