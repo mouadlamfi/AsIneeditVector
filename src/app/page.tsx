@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { EmbodyEternityAnimation } from '@/components/embody-eternity-animation';
+import { SingularityHomepage } from '@/components/singularity-homepage';
 
 export default function HomePage() {
   const router = useRouter();
@@ -11,7 +11,7 @@ export default function HomePage() {
     router.push('/art');
   };
 
-  return <EmbodyEternityAnimation onTakeMeIn={handleTakeMeIn} />;
+  return <SingularityHomepage onTakeMeIn={handleTakeMeIn} />;
 }
 
     
