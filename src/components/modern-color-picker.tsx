@@ -304,8 +304,20 @@ export function ModernColorPicker({ color, onColorChange, onClose, isOpen }: Mod
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <Card className="w-96 bg-background/95 backdrop-blur-md border border-border shadow-2xl">
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm" 
+      style={{ pointerEvents: 'auto' }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <Card 
+        className="w-96 bg-background/95 backdrop-blur-md border border-border shadow-2xl" 
+        style={{ pointerEvents: 'auto' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <CardContent className="p-6 space-y-4">
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -329,6 +341,7 @@ export function ModernColorPicker({ color, onColorChange, onClose, isOpen }: Mod
                  width={200}
                  height={200}
                  className="w-full h-48 rounded border border-border cursor-crosshair"
+                 style={{ pointerEvents: 'auto' }}
                  onMouseDown={handleCanvasMouseDown}
                  onMouseMove={handleCanvasMouseMove}
                  onMouseUp={handleCanvasMouseUp}
@@ -358,6 +371,7 @@ export function ModernColorPicker({ color, onColorChange, onClose, isOpen }: Mod
                  width={30}
                  height={200}
                  className="w-8 h-48 rounded border border-border cursor-crosshair"
+                 style={{ pointerEvents: 'auto' }}
                  onMouseDown={handleBrightnessMouseDown}
                  onMouseMove={handleBrightnessMouseMove}
                  onMouseUp={handleBrightnessMouseUp}
