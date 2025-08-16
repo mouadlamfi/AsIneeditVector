@@ -2,16 +2,16 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { PlatonicSolidAnimation } from '@/components/platonic-solid-animation';
+import { EmbodyEternityAnimation } from '@/components/embody-eternity-animation';
 
 export default function HomePage() {
   const router = useRouter();
 
-  const handleExploreClick = () => {
+  const handleTakeMeIn = () => {
     router.push('/art');
   };
 
-  return <PlatonicSolidAnimation onExploreClick={handleExploreClick} />;
+  return <EmbodyEternityAnimation onTakeMeIn={handleTakeMeIn} />;
 }
 
     
