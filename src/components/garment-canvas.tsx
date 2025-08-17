@@ -136,6 +136,44 @@ export function GarmentCanvas() {
   const [draggingPointIndex, setDraggingPointIndex] = useState<number | null>(null);
   const [currentMousePosition, setCurrentMousePosition] = useState<Point | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+
+  // Responsive canvas size management
+  const resizeCanvas = useCallback(() => {
+    if (!canvasRef.current) return;
+    
+    const container = canvasRef.current.parentElement;
+    if (!container) return;
+    
+    const newWidth = container.offsetWidth;
+    const newHeight = container.offsetHeight;
+    
+    // Debug logging (only on client)
+    if (typeof window !== 'undefined') {
+      console.log('📏 Canvas resize:', {
+        oldWidth: canvasSize.width,
+        oldHeight: canvasSize.height,
+        newWidth,
+        newHeight,
+        containerWidth: container.offsetWidth,
+        containerHeight: container.offsetHeight,
+        windowWidth: window.innerWidth,
+        windowHeight: window.innerHeight
+      });
+    }
+    
+    setCanvasSize({
+      width: newWidth,
+      height: newHeight,
+    });
+    
+    // Update SVG dimensions for responsive design
+    if (canvasRef.current) {
+      canvasRef.current.style.width = `${newWidth}px`;
+      canvasRef.current.style.height = `${newHeight}px`;
+      canvasRef.current.style.minWidth = `${newWidth}px`;
+      canvasRef.current.style.minHeight = `${newHeight}px`;
+    }
+  }, [canvasSize]);
   const [canvasMode, setCanvasMode] = useState<CanvasMode>('draw');
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState<{ x: number, y: number } | null>(null);
@@ -186,7 +224,17 @@ export function GarmentCanvas() {
 
   // Calculate current viewport bounds for efficient rendering
   const getViewportBounds = useCallback(() => {
-    if (!canvasRef.current) return { minX: 0, minY: 0, maxX: 1000, maxY: 1000 };
+    if (!canvasRef.current) {
+      // Use fallback dimensions for SSR
+      const fallbackWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+      const fallbackHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+      return { 
+        minX: 0, 
+        minY: 0, 
+        maxX: fallbackWidth, 
+        maxY: fallbackHeight 
+      };
+    }
     
     const rect = canvasRef.current.getBoundingClientRect();
     const viewportWidth = rect.width / scale;
@@ -194,6 +242,19 @@ export function GarmentCanvas() {
     
     // Add extra padding to ensure pattern covers the full viewport
     const padding = Math.max(viewportWidth, viewportHeight) * 0.5;
+    
+    // Debug logging for responsive design (only on client)
+    if (typeof window !== 'undefined') {
+      console.log('🖥️ Viewport Debug:', {
+        canvasWidth: rect.width,
+        canvasHeight: rect.height,
+        windowWidth: window.innerWidth,
+        windowHeight: window.innerHeight,
+        viewportWidth,
+        viewportHeight,
+        padding
+      });
+    }
     
     return {
       minX: (-canvasOffset.x / scale) - padding,
@@ -205,17 +266,37 @@ export function GarmentCanvas() {
 
   useEffect(() => {
     const handleResize = () => {
-      if (canvasRef.current) {
-        setCanvasSize({
-          width: canvasRef.current.clientWidth,
-          height: canvasRef.current.clientHeight,
-        });
+      console.log('📐 Window resized - regenerating Flower of Life pattern');
+      
+      // Use responsive canvas resize function
+      resizeCanvas();
+      
+      // Force regeneration of Flower of Life pattern
+      // This will trigger a re-render with new viewport bounds
+      const newViewportBounds = getViewportBounds();
+      console.log('🔄 New viewport bounds:', newViewportBounds);
+    };
+    
+    // Initial resize
+    handleResize();
+    
+    // Add resize listener
+    window.addEventListener('resize', handleResize);
+    
+    // Add tab visibility change listener
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('👁️ Tab became visible - regenerating pattern');
+        handleResize();
       }
     };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [getViewportBounds, resizeCanvas]);
 
   // Optimized scroll-to-zoom functionality with throttling
   useEffect(() => {
@@ -909,8 +990,8 @@ export function GarmentCanvas() {
           ref={svgRef} 
           className="w-full h-full absolute top-0 left-0" 
           style={{ 
-            minWidth: '2000px',
-            minHeight: '2000px',
+            minWidth: typeof window !== 'undefined' ? `${Math.max(2000, window.innerWidth)}px` : '2000px',
+            minHeight: typeof window !== 'undefined' ? `${Math.max(2000, window.innerHeight)}px` : '2000px',
             pointerEvents: 'none'
           }}
         >

@@ -58,8 +58,19 @@ class FlowerOfLifeGeometry {
     const startY = Math.floor((viewportBounds.minY - padding) / verticalSpacing) * verticalSpacing;
     const endY = Math.ceil((viewportBounds.maxY + padding) / verticalSpacing) * verticalSpacing;
 
-    // Performance limit to prevent excessive rendering
-    const maxMotifs = 400; // Increased limit for better coverage
+    // Dynamic performance limit based on viewport size
+    const viewportArea = (viewportBounds.maxX - viewportBounds.minX) * (viewportBounds.maxY - viewportBounds.minY);
+    const maxMotifs = Math.min(800, Math.max(200, Math.floor(viewportArea / 10000))); // Responsive limit
+    
+    console.log('🌸 Flower of Life Debug:', {
+      viewportBounds,
+      horizontalSpacing,
+      verticalSpacing,
+      startX, endX, startY, endY,
+      maxMotifs,
+      viewportArea
+    });
+    
     let motifCount = 0;
 
     for (let y = startY; y <= endY && motifCount < maxMotifs; y += verticalSpacing) {
