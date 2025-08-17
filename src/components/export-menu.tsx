@@ -54,6 +54,22 @@ export function ExportMenu() {
     // Remove preview elements
     clone.querySelector('g[data-preview-group]')?.remove();
     
+    // Apply export settings filters
+    if (!exportSettings.includeBackground) {
+      // Remove Flower of Life grid
+      clone.querySelector('.flower-of-life-grid')?.remove();
+    }
+    
+    if (!exportSettings.includeGrid) {
+      // Remove grid lines
+      clone.querySelectorAll('.grid-enhanced').forEach(el => el.remove());
+    }
+    
+    if (!exportSettings.includeMeasurements) {
+      // Remove measurement elements
+      clone.querySelectorAll('[data-measurement-group]').forEach(el => el.remove());
+    }
+    
     // Show all elements that should be exported
     clone.querySelectorAll('[data-export-hide="false"]').forEach(el => {
       (el as HTMLElement).classList.remove('hidden');
@@ -81,38 +97,32 @@ export function ExportMenu() {
       clone.insertBefore(background, clone.firstChild);
     }
 
-    // Add grid if enabled
-    if (exportSettings.includeGrid) {
-      const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      gridGroup.setAttribute('id', 'export-grid');
-      gridGroup.setAttribute('data-export-hide', 'false');
-      
-      // Add Flower of Life grid elements here
-      // This would include the grid circles and intersection points
-      
-      clone.appendChild(gridGroup);
-    }
-
     return clone;
   };
 
   const exportDesign = async (format: 'png' | 'pdf' | 'svg' | 'jpg') => {
     setIsExporting(true);
     
+    console.log('Starting export:', format, 'with settings:', exportSettings);
+    
     try {
-      if (format === 'svg') {
-        // For SVG, create enhanced export with all layers
-        const enhancedSvg = createEnhancedSVG();
-        if (enhancedSvg) {
-          const svgString = new XMLSerializer().serializeToString(enhancedSvg);
-          const blob = new Blob([svgString], { type: 'image/svg+xml' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `asineedit-design-${new Date().toISOString().split('T')[0]}.svg`;
-          a.click();
-          URL.revokeObjectURL(url);
-        }
+              if (format === 'svg') {
+          // For SVG, create enhanced export with all layers
+          const enhancedSvg = createEnhancedSVG();
+          if (enhancedSvg) {
+            console.log('SVG export created successfully');
+            const svgString = new XMLSerializer().serializeToString(enhancedSvg);
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `asineedit-design-${new Date().toISOString().split('T')[0]}.svg`;
+            a.click();
+            URL.revokeObjectURL(url);
+            console.log('SVG export completed');
+          } else {
+            console.error('Failed to create enhanced SVG');
+          }
       } else {
         // For raster formats, capture the canvas area
         const canvasContainer = document.querySelector('#canvas-container') as HTMLElement;
@@ -144,12 +154,28 @@ export function ExportMenu() {
           // Remove preview elements
           svgClone.querySelector('g[data-preview-group]')?.remove();
           
+          // Apply export settings filters
+          if (!exportSettings.includeBackground) {
+            // Remove Flower of Life grid
+            svgClone.querySelector('.flower-of-life-grid')?.remove();
+          }
+          
+          if (!exportSettings.includeGrid) {
+            // Remove grid lines
+            svgClone.querySelectorAll('.grid-enhanced').forEach(el => el.remove());
+          }
+          
+          if (!exportSettings.includeMeasurements) {
+            // Remove measurement elements
+            svgClone.querySelectorAll('[data-measurement-group]').forEach(el => el.remove());
+          }
+          
           // Show all elements that should be exported
           svgClone.querySelectorAll('[data-export-hide="false"]').forEach(el => {
             (el as HTMLElement).classList.remove('hidden');
           });
 
-          // Set SVG dimensions
+          // Set SVG dimensions and enable pointer events for capture
           svgClone.setAttribute('width', '1200');
           svgClone.setAttribute('height', '800');
           svgClone.setAttribute('viewBox', '0 0 1200 800');
@@ -158,6 +184,7 @@ export function ExportMenu() {
           svgClone.style.left = '0';
           svgClone.style.width = '100%';
           svgClone.style.height = '100%';
+          svgClone.style.pointerEvents = 'auto'; // Enable pointer events for capture
           
           exportContainer.appendChild(svgClone);
 
@@ -194,10 +221,12 @@ export function ExportMenu() {
               const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
               const quality = format === 'jpg' ? 0.9 : 1.0;
               
+              console.log(`${format.toUpperCase()} export created successfully`);
               const a = document.createElement('a');
               a.href = canvas.toDataURL(mimeType, quality);
               a.download = `asineedit-design-${new Date().toISOString().split('T')[0]}.${format}`;
               a.click();
+              console.log(`${format.toUpperCase()} export completed`);
             } else if (format === 'pdf') {
               const imgData = canvas.toDataURL('image/png', 1.0);
               
@@ -239,7 +268,9 @@ export function ExportMenu() {
               pdf.text(`Scale: ${Math.round(scale * 100)}%`, 10, pageHeight - 30);
               pdf.text(`Layers: ${layers.length}`, 10, pageHeight - 40);
               
+              console.log('PDF export created successfully');
               pdf.save(`asineedit-design-${new Date().toISOString().split('T')[0]}.pdf`);
+              console.log('PDF export completed');
             }
 
             // Clean up

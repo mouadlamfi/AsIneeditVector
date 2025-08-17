@@ -910,9 +910,9 @@ export function GarmentCanvas() {
           className="w-full h-full absolute top-0 left-0" 
           style={{ 
             minWidth: '2000px',
-            minHeight: '2000px'
+            minHeight: '2000px',
+            pointerEvents: 'none'
           }}
-          pointerEvents="none"
         >
           {/* Flower of Life Grid - Always Active */}
           <FlowerOfLifeGrid
