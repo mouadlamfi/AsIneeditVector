@@ -11,7 +11,6 @@ const nextConfig = {
   distDir: 'out',
   
   // Production optimizations
-  swcMinify: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
@@ -22,7 +21,6 @@ const nextConfig = {
   // Performance optimizations
   experimental: {
     optimizeCss: true,
-    legacyBrowsers: false,
   },
   
   // Webpack optimizations

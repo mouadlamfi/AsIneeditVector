@@ -5,8 +5,6 @@
 
 // Global function to clear all modals and overlays
 export function clearAllModalsAndOverlays() {
-  console.log('🧹 Clearing all modals and overlays...');
-  
   // Remove any backdrop elements
   const backdropSelectors = [
     '.modal-backdrop',
@@ -20,7 +18,6 @@ export function clearAllModalsAndOverlays() {
   
   backdropSelectors.forEach(selector => {
     document.querySelectorAll(selector).forEach(el => {
-      console.log('🗑️ Removing backdrop element:', el);
       el.remove();
     });
   });
@@ -30,7 +27,6 @@ export function clearAllModalsAndOverlays() {
     const style = window.getComputedStyle(el);
     if (style.position === 'fixed' && 
         (style.zIndex === '9999' || style.zIndex === '9998' || style.zIndex === '9997')) {
-      console.log('🗑️ Removing fixed overlay element:', el);
       el.remove();
     }
   });
@@ -46,21 +42,14 @@ export function clearAllModalsAndOverlays() {
   // Remove any temporary export containers
   const exportContainer = document.getElementById('export-container');
   if (exportContainer) {
-    console.log('🗑️ Removing export container');
     exportContainer.remove();
   }
-  
-  // Reset any React state that might be stuck
-  // This will be handled by individual components
-  
-  console.log('✅ Modal cleanup completed');
 }
 
 // Global escape key handler
 export function setupGlobalEscapeHandler() {
-  const handleEscape = (e: KeyboardEvent) => {
+  const handleEscape = (e) => {
     if (e.key === 'Escape') {
-      console.log('⌨️ Escape key pressed - clearing modals');
       clearAllModalsAndOverlays();
     }
   };
@@ -73,14 +62,13 @@ export function setupGlobalEscapeHandler() {
 
 // Global click outside handler
 export function setupGlobalClickOutsideHandler() {
-  const handleClick = (e: Event) => {
-    const target = e.target as HTMLElement;
+  const handleClick = (e) => {
+    const target = e.target;
     
     // Check if clicking on backdrop/overlay elements
     if (target.matches('.modal-backdrop, .overlay, [data-backdrop]') ||
         target.classList.contains('backdrop') ||
         target.style.position === 'fixed') {
-      console.log('🖱️ Clicked on backdrop - clearing modals');
       clearAllModalsAndOverlays();
     }
   };
@@ -93,7 +81,6 @@ export function setupGlobalClickOutsideHandler() {
 
 // Debug function for manual cleanup
 export function debugClearModals() {
-  console.log('🐛 Debug: Manual modal cleanup triggered');
   clearAllModalsAndOverlays();
   
   // Also log current modal state
