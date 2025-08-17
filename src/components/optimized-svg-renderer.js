@@ -1,18 +1,4 @@
 import React, { useMemo, useCallback } from 'react';
-import type { Layer, Point } from '@/lib/types';
-
-interface OptimizedSVGRendererProps {
-  layers: Layer[];
-  activeLayerId: string | null;
-  scale: number;
-  viewportBounds: {
-    minX: number;
-    minY: number;
-    maxX: number;
-    maxY: number;
-  };
-  onPointClick?: (layerId: string, pointIndex: number) => void;
-}
 
 // Memoized Path component for individual paths
 const MemoizedPath = React.memo(({ 
@@ -20,11 +6,6 @@ const MemoizedPath = React.memo(({
   strokeWidth, 
   color, 
   isActive 
-}: { 
-  points: Point[]; 
-  strokeWidth: number; 
-  color: string; 
-  isActive: boolean;
 }) => {
   const pathData = useMemo(() => {
     if (points.length === 0) return '';
@@ -74,14 +55,6 @@ const MemoizedPoints = React.memo(({
   isActive,
   onPointClick,
   viewportBounds
-}: { 
-  points: Point[]; 
-  pointRadius: number; 
-  color: string; 
-  layerId: string;
-  isActive: boolean;
-  onPointClick?: (layerId: string, pointIndex: number) => void;
-  viewportBounds: { minX: number; minY: number; maxX: number; maxY: number };
 }) => {
   // Only render points that are visible in the viewport
   const visiblePoints = useMemo(() => {
@@ -124,11 +97,6 @@ const MemoizedLayer = React.memo(({
   isActive,
   viewportBounds,
   onPointClick
-}: { 
-  layer: Layer; 
-  isActive: boolean;
-  viewportBounds: { minX: number; minY: number; maxX: number; maxY: number };
-  onPointClick?: (layerId: string, pointIndex: number) => void;
 }) => {
   // Check if layer is visible in viewport
   const isLayerVisible = useMemo(() => {
@@ -193,7 +161,7 @@ const MemoizedLayer = React.memo(({
 
 MemoizedLayer.displayName = 'MemoizedLayer';
 
-export const OptimizedSVGRenderer: React.FC<OptimizedSVGRendererProps> = ({
+export const OptimizedSVGRenderer = ({
   layers,
   activeLayerId,
   scale,

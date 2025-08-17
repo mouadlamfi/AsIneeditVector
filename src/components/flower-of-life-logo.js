@@ -13,22 +13,15 @@ const ANIMATION_TIMINGS = {
   CIRCLE_DELAY: 161.8, // Golden ratio * 100
 };
 
-interface FlowerOfLifeLogoProps {
-  onClick: () => void;
-  className?: string;
-  animated?: boolean;
-  size?: number;
-}
-
 export function FlowerOfLifeLogo({ 
   onClick, 
   className, 
   animated = true, 
   size = 60 
-}: FlowerOfLifeLogoProps) {
+}) {
   const [isHovered, setIsHovered] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
-  const [animationPhase, setAnimationPhase] = useState<'idle' | 'hover' | 'click'>('idle');
+  const [animationPhase, setAnimationPhase] = useState('idle');
 
   // Circle positions based on sacred geometry
   const radius = size / 6; // Base radius
@@ -173,8 +166,6 @@ export function FlowerOfLifeLogo({
           );
         })}
       </svg>
-
-            {/* CSS animations are now in globals.css */}
     </div>
   );
 }

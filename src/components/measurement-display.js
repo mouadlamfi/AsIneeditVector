@@ -5,11 +5,7 @@ import { useDesign } from '@/context/design-context';
 import { getMeasurements, formatDistance, formatAngle } from '@/lib/measurement-utils';
 import { cn } from '@/lib/utils';
 
-interface MeasurementDisplayProps {
-  className?: string;
-}
-
-export function MeasurementDisplay({ className }: MeasurementDisplayProps) {
+export function MeasurementDisplay({ className }) {
   const { layers, activeLayerId, gridUnit } = useDesign();
   
   const activeLayer = layers.find(l => l.id === activeLayerId);

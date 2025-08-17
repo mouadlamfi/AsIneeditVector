@@ -1,16 +1,7 @@
-import type { Point } from '@/lib/types';
-
-export interface Measurement {
-  distance: number;
-  angle: number;
-  startPoint: Point;
-  endPoint: Point;
-}
-
 /**
  * Calculate the distance between two points
  */
-export function calculateDistance(point1: Point, point2: Point): number {
+export function calculateDistance(point1, point2) {
   const dx = point2.x - point1.x;
   const dy = point2.y - point1.y;
   return Math.sqrt(dx * dx + dy * dy);
@@ -20,7 +11,7 @@ export function calculateDistance(point1: Point, point2: Point): number {
  * Calculate the angle between a line segment and the horizontal axis
  * Returns angle in degrees (0-360)
  */
-export function calculateAngle(point1: Point, point2: Point): number {
+export function calculateAngle(point1, point2) {
   const dx = point2.x - point1.x;
   const dy = point2.y - point1.y;
   
@@ -41,7 +32,7 @@ export function calculateAngle(point1: Point, point2: Point): number {
 /**
  * Calculate measurement between two points
  */
-export function calculateMeasurement(point1: Point, point2: Point): Measurement {
+export function calculateMeasurement(point1, point2) {
   return {
     distance: calculateDistance(point1, point2),
     angle: calculateAngle(point1, point2),
@@ -53,7 +44,7 @@ export function calculateMeasurement(point1: Point, point2: Point): Measurement 
 /**
  * Format distance for display
  */
-export function formatDistance(distance: number, unit: 'cm' | 'inch'): string {
+export function formatDistance(distance, unit) {
   if (unit === 'cm') {
     return `${distance.toFixed(2)} cm`;
   } else {
@@ -64,15 +55,15 @@ export function formatDistance(distance: number, unit: 'cm' | 'inch'): string {
 /**
  * Format angle for display
  */
-export function formatAngle(angle: number): string {
+export function formatAngle(angle) {
   return `${angle.toFixed(1)}°`;
 }
 
 /**
  * Get all measurements for a series of points
  */
-export function getMeasurements(points: Point[]): Measurement[] {
-  const measurements: Measurement[] = [];
+export function getMeasurements(points) {
+  const measurements = [];
   
   for (let i = 0; i < points.length - 1; i++) {
     const measurement = calculateMeasurement(points[i], points[i + 1]);
@@ -85,7 +76,7 @@ export function getMeasurements(points: Point[]): Measurement[] {
 /**
  * Calculate total length of a path
  */
-export function calculateTotalLength(points: Point[]): number {
+export function calculateTotalLength(points) {
   let totalLength = 0;
   
   for (let i = 0; i < points.length - 1; i++) {

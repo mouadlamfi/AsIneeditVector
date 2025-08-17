@@ -20,7 +20,7 @@ const nextConfig = {
   
   // Performance optimizations
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Removed due to critters dependency issue
   },
   
   // Webpack optimizations
