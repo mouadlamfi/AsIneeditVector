@@ -139,39 +139,43 @@ export function GarmentCanvas() {
 
   // Responsive canvas size management
   const resizeCanvas = useCallback(() => {
-    if (!canvasRef.current) return;
-    
-    const container = canvasRef.current.parentElement;
-    if (!container) return;
-    
-    const newWidth = container.offsetWidth;
-    const newHeight = container.offsetHeight;
-    
-    // Debug logging (only on client)
-    if (typeof window !== 'undefined') {
-      console.log('📏 Canvas resize:', {
-        oldWidth: canvasSize.width,
-        oldHeight: canvasSize.height,
-        newWidth,
-        newHeight,
-        containerWidth: container.offsetWidth,
-        containerHeight: container.offsetHeight,
-        windowWidth: window.innerWidth,
-        windowHeight: window.innerHeight
+    try {
+      if (!canvasRef.current) return;
+      
+      const container = canvasRef.current.parentElement;
+      if (!container) return;
+      
+      const newWidth = container.offsetWidth;
+      const newHeight = container.offsetHeight;
+      
+      // Debug logging (only on client)
+      if (typeof window !== 'undefined') {
+        console.log('📏 Canvas resize:', {
+          oldWidth: canvasSize.width,
+          oldHeight: canvasSize.height,
+          newWidth,
+          newHeight,
+          containerWidth: container.offsetWidth,
+          containerHeight: container.offsetHeight,
+          windowWidth: window.innerWidth,
+          windowHeight: window.innerHeight
+        });
+      }
+      
+      setCanvasSize({
+        width: newWidth,
+        height: newHeight,
       });
-    }
-    
-    setCanvasSize({
-      width: newWidth,
-      height: newHeight,
-    });
-    
-    // Update SVG dimensions for responsive design
-    if (canvasRef.current) {
-      canvasRef.current.style.width = `${newWidth}px`;
-      canvasRef.current.style.height = `${newHeight}px`;
-      canvasRef.current.style.minWidth = `${newWidth}px`;
-      canvasRef.current.style.minHeight = `${newHeight}px`;
+      
+      // Update SVG dimensions for responsive design
+      if (canvasRef.current) {
+        canvasRef.current.style.width = `${newWidth}px`;
+        canvasRef.current.style.height = `${newHeight}px`;
+        canvasRef.current.style.minWidth = `${newWidth}px`;
+        canvasRef.current.style.minHeight = `${newHeight}px`;
+      }
+    } catch (error) {
+      console.error('Error resizing canvas:', error);
     }
   }, [canvasSize]);
   const [canvasMode, setCanvasMode] = useState<CanvasMode>('draw');
@@ -224,57 +228,66 @@ export function GarmentCanvas() {
 
   // Calculate current viewport bounds for efficient rendering
   const getViewportBounds = useCallback(() => {
-    if (!canvasRef.current) {
-      // Use fallback dimensions for SSR
-      const fallbackWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
-      const fallbackHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
-      return { 
-        minX: 0, 
-        minY: 0, 
-        maxX: fallbackWidth, 
-        maxY: fallbackHeight 
+    try {
+      if (!canvasRef.current) {
+        // Use fallback dimensions for SSR
+        const fallbackWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+        const fallbackHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+        return { 
+          minX: 0, 
+          minY: 0, 
+          maxX: fallbackWidth, 
+          maxY: fallbackHeight 
+        };
+      }
+      
+      const rect = canvasRef.current.getBoundingClientRect();
+      const viewportWidth = rect.width / scale;
+      const viewportHeight = rect.height / scale;
+      
+      // Add extra padding to ensure pattern covers the full viewport
+      const padding = Math.max(viewportWidth, viewportHeight) * 0.5;
+      
+      // Debug logging for responsive design (only on client)
+      if (typeof window !== 'undefined') {
+        console.log('🖥️ Viewport Debug:', {
+          canvasWidth: rect.width,
+          canvasHeight: rect.height,
+          windowWidth: window.innerWidth,
+          windowHeight: window.innerHeight,
+          viewportWidth,
+          viewportHeight,
+          padding
+        });
+      }
+      
+      return {
+        minX: (-canvasOffset.x / scale) - padding,
+        minY: (-canvasOffset.y / scale) - padding,
+        maxX: ((-canvasOffset.x + rect.width) / scale) + padding,
+        maxY: ((-canvasOffset.y + rect.height) / scale) + padding
       };
+    } catch (error) {
+      console.error('Error calculating viewport bounds:', error);
+      return { minX: 0, minY: 0, maxX: 1200, maxY: 800 };
     }
-    
-    const rect = canvasRef.current.getBoundingClientRect();
-    const viewportWidth = rect.width / scale;
-    const viewportHeight = rect.height / scale;
-    
-    // Add extra padding to ensure pattern covers the full viewport
-    const padding = Math.max(viewportWidth, viewportHeight) * 0.5;
-    
-    // Debug logging for responsive design (only on client)
-    if (typeof window !== 'undefined') {
-      console.log('🖥️ Viewport Debug:', {
-        canvasWidth: rect.width,
-        canvasHeight: rect.height,
-        windowWidth: window.innerWidth,
-        windowHeight: window.innerHeight,
-        viewportWidth,
-        viewportHeight,
-        padding
-      });
-    }
-    
-    return {
-      minX: (-canvasOffset.x / scale) - padding,
-      minY: (-canvasOffset.y / scale) - padding,
-      maxX: ((-canvasOffset.x + rect.width) / scale) + padding,
-      maxY: ((-canvasOffset.y + rect.height) / scale) + padding
-    };
   }, [canvasOffset, scale]);
 
   useEffect(() => {
     const handleResize = () => {
-      console.log('📐 Window resized - regenerating Flower of Life pattern');
-      
-      // Use responsive canvas resize function
-      resizeCanvas();
-      
-      // Force regeneration of Flower of Life pattern
-      // This will trigger a re-render with new viewport bounds
-      const newViewportBounds = getViewportBounds();
-      console.log('🔄 New viewport bounds:', newViewportBounds);
+      try {
+        console.log('📐 Window resized - regenerating Flower of Life pattern');
+        
+        // Use responsive canvas resize function
+        resizeCanvas();
+        
+        // Force regeneration of Flower of Life pattern
+        // This will trigger a re-render with new viewport bounds
+        const newViewportBounds = getViewportBounds();
+        console.log('🔄 New viewport bounds:', newViewportBounds);
+      } catch (error) {
+        console.error('Error handling resize:', error);
+      }
     };
     
     // Initial resize

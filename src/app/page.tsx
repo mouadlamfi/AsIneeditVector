@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from 'react';
 import { DesignProvider } from '@/context/design-context';
 import { GarmentCanvas } from '@/components/garment-canvas';
 import { CollapsibleMenu } from '@/components/collapsible-menu';
@@ -23,26 +24,38 @@ function ArtApp() {
 
   // Global modal cleanup on app initialization
   useEffect(() => {
-    console.log('🚀 App initialized - setting up global modal cleanup');
-    
-    // Clear any existing modals on app load
-    clearAllModalsAndOverlays();
-    
-    // Setup global handlers
-    const cleanupEscape = setupGlobalEscapeHandler();
-    const cleanupClick = setupGlobalClickOutsideHandler();
-    
-    // Cleanup on unmount
-    return () => {
-      cleanupEscape();
-      cleanupClick();
-    };
+    try {
+      console.log('🚀 App initialized - setting up global modal cleanup');
+      
+      // Clear any existing modals on app load
+      clearAllModalsAndOverlays();
+      
+      // Setup global handlers
+      const cleanupEscape = setupGlobalEscapeHandler();
+      const cleanupClick = setupGlobalClickOutsideHandler();
+      
+      // Cleanup on unmount
+      return () => {
+        try {
+          cleanupEscape();
+          cleanupClick();
+        } catch (error) {
+          console.error('Error during cleanup:', error);
+        }
+      };
+    } catch (error) {
+      console.error('Error initializing app:', error);
+    }
   }, []);
 
   const toggleMenu = () => {
-    // Clear any existing modals before opening menu
-    clearAllModalsAndOverlays();
-    setIsMenuVisible(!isMenuVisible);
+    try {
+      // Clear any existing modals before opening menu
+      clearAllModalsAndOverlays();
+      setIsMenuVisible(!isMenuVisible);
+    } catch (error) {
+      console.error('Error toggling menu:', error);
+    }
   };
 
   return (
@@ -117,12 +130,56 @@ function ArtApp() {
 
 export default function HomePage() {
   return (
-    <TooltipProvider>
-      <DesignProvider>
-        <ArtApp />
-      </DesignProvider>
-    </TooltipProvider>
+    <div className="h-screen w-screen bg-black overflow-hidden">
+      <TooltipProvider>
+        <DesignProvider>
+          <ErrorBoundary>
+            <ArtApp />
+          </ErrorBoundary>
+        </DesignProvider>
+      </TooltipProvider>
+    </div>
   );
+}
+
+// Error boundary component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('App error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-screen w-screen bg-black text-white flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+            <p className="text-gray-400 mb-4">The app encountered an error and needs to reload.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-white text-black rounded hover:bg-gray-200"
+            >
+              Reload App
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
 }
 
     
