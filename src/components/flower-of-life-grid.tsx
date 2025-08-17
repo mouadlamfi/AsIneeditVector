@@ -59,7 +59,7 @@ class FlowerOfLifeGeometry {
     const endY = Math.ceil((viewportBounds.maxY + padding) / verticalSpacing) * verticalSpacing;
 
     // Performance limit to prevent excessive rendering
-    const maxMotifs = 200; // Limit for performance
+    const maxMotifs = 400; // Increased limit for better coverage
     let motifCount = 0;
 
     for (let y = startY; y <= endY && motifCount < maxMotifs; y += verticalSpacing) {
@@ -197,7 +197,7 @@ export const FlowerOfLifeGrid: React.FC<FlowerOfLifeGridProps> = React.memo(({
     const motifCenters = geometry.getMotifCenters(viewportBounds);
     
     // Performance optimization: limit the number of rendered elements
-    const maxElements = 1000; // Limit for performance
+    const maxElements = 2000; // Increased limit for better coverage
     let elementCount = 0;
     
     // Render circles with performance optimization
@@ -237,7 +237,7 @@ export const FlowerOfLifeGrid: React.FC<FlowerOfLifeGridProps> = React.memo(({
 
     // Render intersection points with glow effect (limited for performance)
     const intersections = geometry.getAllIntersectionPoints(viewportBounds);
-    const maxIntersections = Math.min(intersections.length, 200); // Limit intersection points
+    const maxIntersections = Math.min(intersections.length, 500); // Increased limit for better coverage
     
     intersections.slice(0, maxIntersections).forEach((point, index) => {
       if (elementCount >= maxElements) return;

@@ -192,11 +192,14 @@ export function GarmentCanvas() {
     const viewportWidth = rect.width / scale;
     const viewportHeight = rect.height / scale;
     
+    // Add extra padding to ensure pattern covers the full viewport
+    const padding = Math.max(viewportWidth, viewportHeight) * 0.5;
+    
     return {
-      minX: -canvasOffset.x / scale,
-      minY: -canvasOffset.y / scale,
-      maxX: (-canvasOffset.x + rect.width) / scale,
-      maxY: (-canvasOffset.y + rect.height) / scale
+      minX: (-canvasOffset.x / scale) - padding,
+      minY: (-canvasOffset.y / scale) - padding,
+      maxX: ((-canvasOffset.x + rect.width) / scale) + padding,
+      maxY: ((-canvasOffset.y + rect.height) / scale) + padding
     };
   }, [canvasOffset, scale]);
 
