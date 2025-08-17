@@ -26,14 +26,6 @@ body {
   perspective: 1000px;
 }
 
-/* Optimize font loading */
-@font-face {
-  font-family: 'Inter';
-  font-display: swap;
-  font-weight: 300 700;
-  src: url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-}
-
 /* Hardware acceleration for touch devices */
 @media (hover: none) and (pointer: coarse) {
   .interactive-element {

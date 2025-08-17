@@ -148,19 +148,7 @@ export function GarmentCanvas() {
       const newWidth = container.offsetWidth;
       const newHeight = container.offsetHeight;
       
-      // Debug logging (only on client)
-      if (typeof window !== 'undefined') {
-        console.log('📏 Canvas resize:', {
-          oldWidth: canvasSize.width,
-          oldHeight: canvasSize.height,
-          newWidth,
-          newHeight,
-          containerWidth: container.offsetWidth,
-          containerHeight: container.offsetHeight,
-          windowWidth: window.innerWidth,
-          windowHeight: window.innerHeight
-        });
-      }
+        // Debug logging removed for performance
       
       setCanvasSize({
         width: newWidth,
@@ -248,18 +236,7 @@ export function GarmentCanvas() {
       // Add extra padding to ensure pattern covers the full viewport
       const padding = Math.max(viewportWidth, viewportHeight) * 0.5;
       
-      // Debug logging for responsive design (only on client)
-      if (typeof window !== 'undefined') {
-        console.log('🖥️ Viewport Debug:', {
-          canvasWidth: rect.width,
-          canvasHeight: rect.height,
-          windowWidth: window.innerWidth,
-          windowHeight: window.innerHeight,
-          viewportWidth,
-          viewportHeight,
-          padding
-        });
-      }
+        // Debug logging removed for performance
       
       return {
         minX: (-canvasOffset.x / scale) - padding,
@@ -276,15 +253,12 @@ export function GarmentCanvas() {
   useEffect(() => {
     const handleResize = () => {
       try {
-        console.log('📐 Window resized - regenerating Flower of Life pattern');
-        
         // Use responsive canvas resize function
         resizeCanvas();
         
         // Force regeneration of Flower of Life pattern
         // This will trigger a re-render with new viewport bounds
-        const newViewportBounds = getViewportBounds();
-        console.log('🔄 New viewport bounds:', newViewportBounds);
+        getViewportBounds();
       } catch (error) {
         console.error('Error handling resize:', error);
       }
