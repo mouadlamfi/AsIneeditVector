@@ -1,0 +1,19 @@
+{
+  "name": "As I Need It - Design & Geometry Platform",
+  "short_name": "AsIneedit",
+  "description": "Sacred Geometry Design Platform for professional vector drawing",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#FFD700",
+  "orientation": "landscape-primary",
+  "scope": "/",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    }
+  ]
+}
