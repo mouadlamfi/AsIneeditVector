@@ -1,10 +1,9 @@
-import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'As I Need It - Design & Geometry Platform',
   description: 'Where creativity meets precision in the universe of design and geometry. Explore our Flower of Life design app for professional vector drawing and sacred geometry.',
   keywords: 'design, geometry, Flower of Life, vector drawing, sacred geometry, art, creativity, precision',
@@ -41,7 +40,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
 };
 
-export const viewport: Viewport = {
+export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -49,11 +48,7 @@ export const viewport: Viewport = {
   themeColor: '#000000',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={inter.className}>

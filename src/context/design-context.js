@@ -1,10 +1,9 @@
-
 "use client";
 
-import type { Point, Layer, Measurement, GridUnit } from '@/lib/types';
 import React, { createContext, useCallback, useContext, useState } from 'react';
+
 // Simple UUID generator for better compatibility
-const generateId = (): string => {
+const generateId = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -12,38 +11,9 @@ const generateId = (): string => {
   });
 };
 
-interface DesignContextState {
-  layers: Layer[];
-  activeLayerId: string | null;
-  scale: number;
-  isSymmetryEnabled: boolean;
-  measurement: Measurement | null;
-  gridUnit: GridUnit;
-  canvasMode: 'draw' | 'pan';
-  setGridUnit: (unit: GridUnit) => void;
-  setCanvasMode: (mode: 'draw' | 'pan') => void;
-  setMeasurement: (measurement: Measurement | null) => void;
-  toggleSymmetry: () => void;
-  addLayer: (existingLayer?: Layer) => void;
-  removeLayer: (layerId: string) => void;
-  setActiveLayer: (layerId: string) => void;
-  updateActiveLayer: (updates: Partial<Layer>) => void;
-  addPoint: (point: Point) => void;
-  clearPoints: () => void;
-  removeLastPoint: () => void;
-  updatePoint: (index: number, point: Partial<Point>) => void;
-  zoomIn: () => void;
-  zoomOut: () => void;
-  setScale: React.Dispatch<React.SetStateAction<number>>;
-  detachLine: () => void;
-  getCanvasAsSvg: (layerId?: string) => string | null;
-  updateLayerBackgroundImage: (layerId: string, image: string | undefined, width: number, height: number) => void;
-  resetImageTransform: (layerId: string) => void;
-}
+const DesignContext = createContext(undefined);
 
-const DesignContext = createContext<DesignContextState | undefined>(undefined);
-
-const initialLayer: Layer = {
+const initialLayer = {
   id: 'default-layer-1',
   name: 'Layer 1',
   points: [],
@@ -52,24 +22,24 @@ const initialLayer: Layer = {
   color: '#FFFFFF', // Default to white
 };
 
-export function DesignProvider({ children }: { children: React.ReactNode }) {
-  const [layers, setLayers] = useState<Layer[]>([initialLayer]);
-  const [activeLayerId, setActiveLayerId] = useState<string | null>(initialLayer.id);
+export function DesignProvider({ children }) {
+  const [layers, setLayers] = useState([initialLayer]);
+  const [activeLayerId, setActiveLayerId] = useState(initialLayer.id);
   const [scale, setScale] = useState(1);
   const [isSymmetryEnabled, setIsSymmetryEnabled] = useState(false);
-  const [measurement, setMeasurement] = useState<Measurement | null>(null);
-  const [gridUnit, setGridUnit] = useState<GridUnit>('cm');
-  const [canvasMode, setCanvasMode] = useState<'draw' | 'pan'>('draw');
+  const [measurement, setMeasurement] = useState(null);
+  const [gridUnit, setGridUnit] = useState('cm');
+  const [canvasMode, setCanvasMode] = useState('draw');
 
   const toggleSymmetry = useCallback(() => setIsSymmetryEnabled(prev => !prev), []);
   const zoomIn = useCallback(() => setScale(s => Math.min(s + 0.1, 5)), []);
   const zoomOut = useCallback(() => setScale(s => Math.max(s - 0.1, 0.2)), []);
 
-  const getCanvasAsSvg = (layerId?: string): string | null => {
+  const getCanvasAsSvg = (layerId) => {
     const svgElement = document.querySelector('#design-canvas-svg');
     if (!svgElement) return null;
   
-    const clone = svgElement.cloneNode(true) as SVGSVGElement;
+    const clone = svgElement.cloneNode(true);
   
     // If a specific layerId is provided, remove all other layers.
     if (layerId) {
@@ -85,7 +55,7 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
     
     // Show elements that are normally hidden
     clone.querySelectorAll('[data-export-hide="false"]').forEach(el => {
-        (el as HTMLElement).classList.remove('hidden');
+        el.classList.remove('hidden');
     });
 
     const serializer = new XMLSerializer();
@@ -93,8 +63,8 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
   };
   
 
-  const addLayer = useCallback((existingLayer?: Layer) => {
-    const newLayer: Layer = existingLayer || {
+  const addLayer = useCallback((existingLayer) => {
+    const newLayer = existingLayer || {
       id: generateId(),
       name: `Layer ${layers.length + 1}`,
       points: [],
@@ -106,7 +76,7 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
     setActiveLayerId(newLayer.id);
   }, [layers.length]);
 
-  const removeLayer = useCallback((layerId: string) => {
+  const removeLayer = useCallback((layerId) => {
     const layerToRemove = layers.find(l => l.id === layerId);
     if (layerToRemove?.isLocked) return;
 
@@ -119,12 +89,12 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
     });
   }, [activeLayerId, layers]);
 
-  const setActiveLayer = useCallback((layerId: string) => {
+  const setActiveLayer = useCallback((layerId) => {
     setActiveLayerId(layerId);
     setMeasurement(null);
   }, []);
 
-  const updateLayer = (layerId: string, updates: Partial<Layer>) => {
+  const updateLayer = (layerId, updates) => {
     setLayers(prev =>
       prev.map(l =>
         l.id === layerId ? { ...l, ...updates } : l
@@ -132,14 +102,14 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const updateActiveLayer = useCallback((updates: Partial<Layer>) => {
+  const updateActiveLayer = useCallback((updates) => {
     if (!activeLayerId) return;
     const activeLayer = layers.find(l => l.id === activeLayerId);
     if (activeLayer?.isLocked) return;
     updateLayer(activeLayerId, updates);
   }, [activeLayerId, layers]);
 
-  const updateLayerPoints = (layerId: string, updateFn: (points: Point[]) => Point[]) => {
+  const updateLayerPoints = (layerId, updateFn) => {
     setLayers(prev =>
       prev.map(l => {
         if (l.id === layerId) {
@@ -151,7 +121,7 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
     );
   };
   
-  const addPoint = useCallback((point: Point) => {
+  const addPoint = useCallback((point) => {
     if (!activeLayerId) return;
     const activeLayer = layers.find(l => l.id === activeLayerId);
     if (activeLayer?.isLocked) return;
@@ -187,7 +157,7 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
     setMeasurement(null);
   }, [activeLayerId, layers]);
 
-  const updatePoint = useCallback((index: number, newPosition: Partial<Point>) => {
+  const updatePoint = useCallback((index, newPosition) => {
     if (!activeLayerId) return;
     const activeLayer = layers.find(l => l.id === activeLayerId);
     if (activeLayer?.isLocked) return;
@@ -196,7 +166,7 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
     );
   }, [activeLayerId, layers]);
   
-  const updateLayerBackgroundImage = useCallback((layerId: string, image: string | undefined, width: number, height: number) => {
+  const updateLayerBackgroundImage = useCallback((layerId, image, width, height) => {
     const canvas = document.getElementById('canvas-container');
     const canvasWidth = canvas?.clientWidth || 500;
     const canvasHeight = canvas?.clientHeight || 500;
@@ -220,7 +190,7 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const resetImageTransform = useCallback((layerId: string) => {
+  const resetImageTransform = useCallback((layerId) => {
     const layer = layers.find(l => l.id === layerId);
     if (!layer || !layer.backgroundImage) return;
 

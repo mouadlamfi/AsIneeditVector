@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -25,8 +24,6 @@ function ArtApp() {
   // Global modal cleanup on app initialization
   useEffect(() => {
     try {
-      console.log('🚀 App initialized - setting up global modal cleanup');
-      
       // Clear any existing modals on app load
       clearAllModalsAndOverlays();
       
@@ -141,20 +138,17 @@ export default function HomePage() {
 }
 
 // Error boundary component
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error?: Error }
-> {
-  constructor(props: { children: React.ReactNode }) {
+class ErrorBoundary extends React.Component {
+  constructor(props) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error, errorInfo) {
     console.error('App error caught by boundary:', error, errorInfo);
   }
 
@@ -179,5 +173,3 @@ class ErrorBoundary extends React.Component<
     return this.props.children;
   }
 }
-
-    
