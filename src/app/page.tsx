@@ -7,7 +7,7 @@ import { CollapsibleMenu } from '@/components/collapsible-menu';
 import { MeasurementDisplay } from '@/components/measurement-display';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Pen, X, Bug } from 'lucide-react';
+import { Bug } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { 
@@ -16,6 +16,7 @@ import {
   setupGlobalClickOutsideHandler,
   debugClearModals 
 } from '@/lib/modal-cleanup';
+import { FlowerOfLifeLogo } from '@/components/flower-of-life-logo';
 
 function ArtApp() {
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -46,30 +47,29 @@ function ArtApp() {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden">
-      {/* Pen Icon Toggle Button */}
+      {/* Flower of Life Logo Menu Button */}
       <div className="fixed top-4 left-4 z-[9999]">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleMenu}
+            <div
               className={cn(
-                "h-12 w-12 bg-background/90 backdrop-blur-sm border border-border shadow-lg",
-                "hover:bg-background/95 transition-all duration-200",
-                "rounded-full"
+                "h-16 w-16 bg-background/90 backdrop-blur-sm border border-border shadow-lg",
+                "hover:bg-background/95 transition-all duration-300",
+                "rounded-full flex items-center justify-center",
+                "hover:shadow-xl hover:shadow-gold/20"
               )}
               style={{ pointerEvents: 'auto' }}
             >
-              {isMenuVisible ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Pen className="h-5 w-5" />
-              )}
-            </Button>
+              <FlowerOfLifeLogo
+                onClick={toggleMenu}
+                size={48}
+                animated={true}
+                className="flower-logo-button"
+              />
+            </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{isMenuVisible ? 'Hide Tools' : 'Show Tools'}</p>
+            <p>{isMenuVisible ? 'Hide Drawing Tools' : 'Show Drawing Tools'}</p>
           </TooltipContent>
         </Tooltip>
       </div>
