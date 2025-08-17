@@ -25,6 +25,7 @@ import { useState, useEffect } from 'react';
 import type { GridUnit } from '@/lib/types';
 import { ExportMenu } from './export-menu';
 import { ModernColorPicker } from './modern-color-picker';
+import { clearAllModalsAndOverlays } from '@/lib/modal-cleanup';
 
 const PROFESSIONAL_COLORS = [
   { name: 'White', value: '#FFFFFF', category: 'white' },
@@ -70,6 +71,8 @@ export function CollapsibleMenu({ isVisible, onClose }: CollapsibleMenuProps) {
   useEffect(() => {
     if (!isVisible) {
       setIsColorPickerOpen(false);
+      // Clear any stuck modals when menu closes
+      clearAllModalsAndOverlays();
     }
   }, [isVisible]);
 

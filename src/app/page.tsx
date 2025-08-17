@@ -7,14 +7,40 @@ import { CollapsibleMenu } from '@/components/collapsible-menu';
 import { MeasurementDisplay } from '@/components/measurement-display';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Pen, X } from 'lucide-react';
+import { Pen, X, Bug } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { 
+  clearAllModalsAndOverlays, 
+  setupGlobalEscapeHandler, 
+  setupGlobalClickOutsideHandler,
+  debugClearModals 
+} from '@/lib/modal-cleanup';
 
 function ArtApp() {
   const [isMenuVisible, setIsMenuVisible] = useState(false);
 
+  // Global modal cleanup on app initialization
+  useEffect(() => {
+    console.log('🚀 App initialized - setting up global modal cleanup');
+    
+    // Clear any existing modals on app load
+    clearAllModalsAndOverlays();
+    
+    // Setup global handlers
+    const cleanupEscape = setupGlobalEscapeHandler();
+    const cleanupClick = setupGlobalClickOutsideHandler();
+    
+    // Cleanup on unmount
+    return () => {
+      cleanupEscape();
+      cleanupClick();
+    };
+  }, []);
+
   const toggleMenu = () => {
+    // Clear any existing modals before opening menu
+    clearAllModalsAndOverlays();
     setIsMenuVisible(!isMenuVisible);
   };
 
@@ -44,6 +70,30 @@ function ArtApp() {
           </TooltipTrigger>
           <TooltipContent>
             <p>{isMenuVisible ? 'Hide Tools' : 'Show Tools'}</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+
+      {/* Debug Button - Temporary for testing */}
+      <div className="fixed top-4 right-4 z-[9999]">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={debugClearModals}
+              className={cn(
+                "h-12 w-12 bg-red-500/90 backdrop-blur-sm border border-red-600 shadow-lg",
+                "hover:bg-red-600/95 transition-all duration-200",
+                "rounded-full"
+              )}
+              style={{ pointerEvents: 'auto' }}
+            >
+              <Bug className="h-5 w-5 text-white" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Clear Stuck Modals (Debug)</p>
           </TooltipContent>
         </Tooltip>
       </div>

@@ -7,6 +7,7 @@ import { Label } from './ui/label';
 import { Card, CardContent } from './ui/card';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { clearAllModalsAndOverlays } from '@/lib/modal-cleanup';
 
 interface ModernColorPickerProps {
   color: string;
@@ -310,6 +311,7 @@ export function ModernColorPicker({ color, onColorChange, onClose, isOpen }: Mod
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
+          clearAllModalsAndOverlays();
         }
       }}
     >
@@ -325,7 +327,10 @@ export function ModernColorPicker({ color, onColorChange, onClose, isOpen }: Mod
             <Button
               variant="ghost"
               size="icon"
-              onClick={onClose}
+              onClick={() => {
+                onClose();
+                clearAllModalsAndOverlays();
+              }}
               className="h-8 w-8"
             >
               <X className="h-4 w-4" />
