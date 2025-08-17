@@ -174,51 +174,7 @@ export function FlowerOfLifeLogo({
         })}
       </svg>
 
-      {/* CSS animations */}
-      <style jsx>{`
-        .flower-logo-idle {
-          animation: breathe ${ANIMATION_TIMINGS.IDLE}ms infinite ease-in-out;
-        }
-
-        .flower-logo-hover .flower-circle {
-          animation: spiral ${ANIMATION_TIMINGS.HOVER}ms ease-out;
-        }
-
-        .flower-logo-click .flower-circle {
-          animation: fibonacci-expand ${ANIMATION_TIMINGS.CLICK}ms ease-out;
-        }
-
-        @keyframes breathe {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.02); }
-        }
-
-        @keyframes spiral {
-          0% { transform: rotate(0deg) scale(1); }
-          50% { transform: rotate(180deg) scale(1.1); }
-          100% { transform: rotate(360deg) scale(1); }
-        }
-
-        @keyframes fibonacci-expand {
-          0% { transform: scale(1); }
-          25% { transform: scale(1.3); }
-          50% { transform: scale(1.6); }
-          75% { transform: scale(1.3); }
-          100% { transform: scale(1); }
-        }
-
-        .flower-circle {
-          transition: all 0.3s ease-out;
-        }
-
-        .circle-0 { animation-delay: 0ms; }
-        .circle-1 { animation-delay: ${ANIMATION_TIMINGS.CIRCLE_DELAY}ms; }
-        .circle-2 { animation-delay: ${ANIMATION_TIMINGS.CIRCLE_DELAY * 2}ms; }
-        .circle-3 { animation-delay: ${ANIMATION_TIMINGS.CIRCLE_DELAY * 3}ms; }
-        .circle-4 { animation-delay: ${ANIMATION_TIMINGS.CIRCLE_DELAY * 4}ms; }
-        .circle-5 { animation-delay: ${ANIMATION_TIMINGS.CIRCLE_DELAY * 5}ms; }
-        .circle-6 { animation-delay: ${ANIMATION_TIMINGS.CIRCLE_DELAY * 6}ms; }
-      `}</style>
+            {/* CSS animations are now in globals.css */}
     </div>
   );
 }
