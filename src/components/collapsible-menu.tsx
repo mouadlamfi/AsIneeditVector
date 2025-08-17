@@ -68,10 +68,10 @@ export function CollapsibleMenu({ isVisible, onClose }: CollapsibleMenuProps) {
 
   // Close color picker when menu closes to prevent backdrop issues
   useEffect(() => {
-    if (!isVisible && isColorPickerOpen) {
+    if (!isVisible) {
       setIsColorPickerOpen(false);
     }
-  }, [isVisible, isColorPickerOpen]);
+  }, [isVisible]);
 
   const handleStrokeWidthChange = (value: number[]) => {
     if (activeLayer) {
@@ -382,13 +382,15 @@ export function CollapsibleMenu({ isVisible, onClose }: CollapsibleMenuProps) {
                  </div>
        </div>
 
-       {/* Modern Color Picker Modal */}
-       <ModernColorPicker
-         color={activeLayer?.color || '#FFFFFF'}
-         onColorChange={handleColorPickerChange}
-         onClose={() => setIsColorPickerOpen(false)}
-         isOpen={isColorPickerOpen}
-       />
+       {/* Modern Color Picker Modal - Rendered outside menu structure */}
+       {isColorPickerOpen && (
+         <ModernColorPicker
+           color={activeLayer?.color || '#FFFFFF'}
+           onColorChange={handleColorPickerChange}
+           onClose={() => setIsColorPickerOpen(false)}
+           isOpen={isColorPickerOpen}
+         />
+       )}
      </div>
    );
  }
