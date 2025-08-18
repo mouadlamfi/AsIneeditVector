@@ -7,9 +7,6 @@
   NPM_VERSION = "9"
   NODE_ENV = "production"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
 [[redirects]]
   from = "/*"
   to = "/index.html"
