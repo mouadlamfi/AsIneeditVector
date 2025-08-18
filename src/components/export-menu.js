@@ -12,7 +12,7 @@ import {
 import { useDesign } from '@/context/design-context';
 import { usePDFExport } from '@/hooks/use-pdf-export';
 
-function addWatermark(container: HTMLElement) {
+function addWatermark(container) {
   const watermark = document.createElement('div');
   watermark.innerText = 'by AsIneedit.com';
   watermark.style.position = 'absolute';
@@ -30,7 +30,7 @@ export function ExportMenu() {
   const { layers, scale, gridUnit, getCanvasAsSvg, measurement } = useDesign();
   const { exportToPDF, isExporting } = usePDFExport();
 
-  const exportSVG = (layerId?: string) => {
+  const exportSVG = (layerId) => {
     const svgData = getCanvasAsSvg(layerId);
     if (!svgData) return;
 
@@ -45,12 +45,12 @@ export function ExportMenu() {
     URL.revokeObjectURL(url);
   };
 
-  const exportPNG = async (layerId?: string) => {
+  const exportPNG = async (layerId) => {
     try {
       // Lazy load html2canvas
       const { default: html2canvas } = await import('html2canvas');
       
-      const canvas = document.querySelector('#design-canvas') as HTMLElement;
+      const canvas = document.querySelector('#design-canvas');
       if (!canvas) return;
 
       const canvasSnapshot = await html2canvas(canvas, {
@@ -69,7 +69,7 @@ export function ExportMenu() {
   };
 
   const exportPDF = async () => {
-    const canvas = document.querySelector('#design-canvas') as HTMLElement;
+    const canvas = document.querySelector('#design-canvas');
     if (!canvas) return;
 
     const exportContainer = document.createElement('div');
@@ -79,7 +79,7 @@ export function ExportMenu() {
     exportContainer.style.padding = '20px';
     document.body.appendChild(exportContainer);
 
-    const canvasClone = canvas.cloneNode(true) as HTMLElement;
+    const canvasClone = canvas.cloneNode(true);
     exportContainer.appendChild(canvasClone);
 
     const watermark = addWatermark(exportContainer);

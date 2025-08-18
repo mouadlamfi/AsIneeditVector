@@ -1,13 +1,6 @@
 "use client";
 
 import React from 'react';
-
-const ClientOnlyTooltip = ({ children }: { children: React.ReactNode }) => {
-  return <>{children}</>;
-};
-export default ClientOnlyTooltip;
-"use client";
-
 import { DesignProvider } from '@/context/design-context';
 import { GarmentCanvas } from '@/components/garment-canvas';
 import { PenTool, Download, Settings, HelpCircle, Zap, Layers, Palette, Ruler } from 'lucide-react';
@@ -26,11 +19,19 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useState, useRef } from 'react';
 import { useDesign } from '@/context/design-context';
-import type { Point } from '@/lib/types';
+
 import { ExportMenu } from '@/components/export-menu';
 import InstructionsPanel from '@/components/instructions-panel';
 
-function addWatermark(container: HTMLElement) {
+/**
+ * @param {Object} props
+ * @param {React.ReactNode} props.children
+ */
+const ClientOnlyTooltip = ({ children }) => {
+  return <>{children}</>;
+};
+
+function addWatermark(container) {
   const watermark = document.createElement('div');
   watermark.innerText = 'by AsIneedit.com';
   watermark.style.position = 'absolute';
@@ -48,7 +49,7 @@ function EnhancedExportMenu() {
   const [isExporting, setIsExporting] = useState(false);
   const { layers, scale, gridUnit, getCanvasAsSvg, measurement } = useDesign();
 
-  const addWatermark = (container: HTMLElement) => {
+  const addWatermark = (container) => {
     const watermark = document.createElement('div');
     watermark.innerText = 'by AsIneedit.com';
     watermark.style.position = 'absolute';
@@ -64,7 +65,7 @@ function EnhancedExportMenu() {
   };
 
   // Calculate measurement for any two points
-  const calculateMeasurement = (p1: Point, p2: Point): { angle: number, length: number } => {
+  const calculateMeasurement = (p1, p2) => {
     const deltaY = p2.y - p1.y;
     const deltaX = p2.x - p1.x;
     
@@ -85,18 +86,18 @@ function EnhancedExportMenu() {
 
   // Create enhanced SVG with all measurements
   const createEnhancedSVG = () => {
-    const svgElement = document.querySelector('#design-canvas-svg') as SVGSVGElement;
+    const svgElement = document.querySelector('#design-canvas-svg');
     if (!svgElement) return null;
 
     // Clone the SVG with all its content
-    const clone = svgElement.cloneNode(true) as SVGSVGElement;
+    const clone = /** @type {SVGSVGElement} */ (svgElement.cloneNode(true));
     
     // Remove preview elements
     clone.querySelector('g[data-preview-group]')?.remove();
     
     // Show all elements that should be exported
     clone.querySelectorAll('[data-export-hide="false"]').forEach(el => {
-      (el as HTMLElement).classList.remove('hidden');
+      el.classList.remove('hidden');
     });
 
     // Set proper dimensions - use the original canvas dimensions
@@ -222,7 +223,7 @@ function EnhancedExportMenu() {
     return clone;
   };
 
-  const exportDesign = async (format: 'png' | 'pdf' | 'svg') => {
+  const exportDesign = async (format) => {
     setIsExporting(true);
     
     try {
@@ -241,8 +242,8 @@ function EnhancedExportMenu() {
         }
       } else {
         // For PNG and PDF, capture the actual canvas area with measurements
-        const canvasContainer = document.querySelector('#canvas-container') as HTMLElement;
-        const svgElement = document.querySelector('#design-canvas-svg') as SVGSVGElement;
+        const canvasContainer = document.querySelector('#canvas-container');
+        const svgElement = document.querySelector('#design-canvas-svg');
         
         if (!canvasContainer || !svgElement) {
           console.error('Canvas elements not found');
@@ -265,14 +266,14 @@ function EnhancedExportMenu() {
 
         try {
           // Clone the SVG with all content
-          const svgClone = svgElement.cloneNode(true) as SVGSVGElement;
+          const svgClone = /** @type {SVGSVGElement} */ (svgElement.cloneNode(true));
           
           // Remove preview elements
           svgClone.querySelector('g[data-preview-group]')?.remove();
           
           // Show all elements that should be exported
           svgClone.querySelectorAll('[data-export-hide="false"]').forEach(el => {
-            (el as HTMLElement).classList.remove('hidden');
+            el.classList.remove('hidden');
           });
 
           // Set SVG dimensions
@@ -436,7 +437,7 @@ function EnhancedExportMenu() {
               width: 1200,
               height: 800,
               onclone: (doc) => {
-                const clonedContainer = doc.querySelector('#export-container') as HTMLElement;
+                const clonedContainer = doc.querySelector('#export-container');
                 if (clonedContainer) {
                   clonedContainer.style.transform = 'scale(1)';
                   clonedContainer.style.transformOrigin = 'top left';
@@ -569,10 +570,13 @@ function StatusIndicator() {
 export default function Home() {
   const [menusVisible, setMenusVisible] = useState(false);
   const [symmetryEnabled, setSymmetryEnabled] = useState(false);
+  
   return (    
     <DesignProvider>
+      <TooltipProvider>
+        <ClientOnlyTooltip>
           {/* Enhanced Header */}
- <InstructionsPanel /> {/* Add the InstructionsPanel here */}
+          <InstructionsPanel />
           <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card/80 backdrop-blur-sm px-6 shadow-sm glass">
             <div className="flex items-center gap-4">
               <div 
@@ -586,7 +590,7 @@ export default function Home() {
                 <div>
                   <h1 className="text-xl font-semibold font-headline text-gradient">
                     As I need it Draw
-                  </h1> {/* Updated Header Title */}
+                  </h1>
                   <p className="text-xs text-muted-foreground">Professional Design Studio</p>
                 </div>
               </div>
@@ -595,13 +599,13 @@ export default function Home() {
             {/* This div contains the elements to be hidden */}
             <div className={`flex items-center gap-4 transition-all duration-300 ${menusVisible ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
               <StatusIndicator />
- <Separator orientation="vertical" className="h-6" />
+              <Separator orientation="vertical" className="h-6" />
               {/* This div contains the icons and Export button */}
               <div className="flex items-center gap-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
- <HelpCircle className={`h-4 w-4 ${menusVisible ? '' : 'pointer-events-none'}`} />
+                      <HelpCircle className={`h-4 w-4 ${menusVisible ? '' : 'pointer-events-none'}`} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -612,7 +616,7 @@ export default function Home() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
- <Settings className={`h-4 w-4 ${menusVisible ? '' : 'pointer-events-none'}`} />
+                      <Settings className={`h-4 w-4 ${menusVisible ? '' : 'pointer-events-none'}`} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -657,7 +661,8 @@ export default function Home() {
               <GarmentCanvas />
             </main>
           </div>
-
+        </ClientOnlyTooltip>
+      </TooltipProvider>
     </DesignProvider>
   );
 }
