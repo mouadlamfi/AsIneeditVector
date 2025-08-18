@@ -24,11 +24,9 @@
     ]
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "next-env.d.ts",
-    "out/types/**/*.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "**/*.js",
+    "**/*.jsx"
   ],
   "exclude": [
     "node_modules"
