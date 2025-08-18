@@ -414,6 +414,7 @@ body {
     opacity: 1;
     visibility: visible;
   }
+}
   
   @keyframes slideIn {
     from { transform: translateY(-10px); opacity: 0; }
@@ -437,4 +438,3 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-}

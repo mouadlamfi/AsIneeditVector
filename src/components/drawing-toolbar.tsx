@@ -95,6 +95,7 @@ export function DrawingToolbar() {
   };
 
   return (
+    // Instruction items displayed persistently
     <div className="space-y-6">
       {/* Zoom and View Controls */}
       <Card className="card-enhanced">
@@ -288,6 +289,23 @@ export function DrawingToolbar() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Instruction items conditional on menu being open - Assuming this component is inside a container that is conditionally rendered */}
+      {/* If this component is always rendered, the instructions should be conditional here */}
+      <div className="flex flex-col gap-1 text-xs text-muted-foreground px-4 py-2">
+        <div className="flex justify-between">
+          <span className="font-semibold text-foreground">Click:</span> Add Point
+        </div>
+        <div className="flex justify-between">
+          <span className="font-semibold text-foreground">Double Click:</span> New Line
+        </div>
+        <div className="flex justify-between">
+          <span className="font-semibold text-foreground">Right Click:</span> Undo
+        </div>
+        <div className="flex justify-between">
+          <span className="font-semibold text-foreground">Middle Click:</span> New Line
+        </div>
+      </div>
     </div>
   );
 }

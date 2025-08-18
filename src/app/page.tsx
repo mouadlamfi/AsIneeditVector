@@ -1,4 +1,11 @@
+"use client";
 
+import React from 'react';
+
+const ClientOnlyTooltip = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
+};
+export default ClientOnlyTooltip;
 "use client";
 
 import { DesignProvider } from '@/context/design-context';
@@ -21,6 +28,7 @@ import { useState, useRef } from 'react';
 import { useDesign } from '@/context/design-context';
 import type { Point } from '@/lib/types';
 import { ExportMenu } from '@/components/export-menu';
+import InstructionsPanel from '@/components/instructions-panel';
 
 function addWatermark(container: HTMLElement) {
   const watermark = document.createElement('div');
@@ -561,11 +569,10 @@ function StatusIndicator() {
 export default function Home() {
   const [menusVisible, setMenusVisible] = useState(false);
   const [symmetryEnabled, setSymmetryEnabled] = useState(false);
-  return (
+  return (    
     <DesignProvider>
-      <TooltipProvider>
-        <div className="flex h-screen w-full flex-col font-body bg-background text-foreground overflow-hidden">
           {/* Enhanced Header */}
+ <InstructionsPanel /> {/* Add the InstructionsPanel here */}
           <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card/80 backdrop-blur-sm px-6 shadow-sm glass">
             <div className="flex items-center gap-4">
               <div 
@@ -578,8 +585,8 @@ export default function Home() {
                 </div>
                 <div>
                   <h1 className="text-xl font-semibold font-headline text-gradient">
-                    As I need It Draw
-                  </h1>
+                    As I need it Draw
+                  </h1> {/* Updated Header Title */}
                   <p className="text-xs text-muted-foreground">Professional Design Studio</p>
                 </div>
               </div>
@@ -650,8 +657,7 @@ export default function Home() {
               <GarmentCanvas />
             </main>
           </div>
-        </div>
-      </TooltipProvider>
+
     </DesignProvider>
   );
 }
