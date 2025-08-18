@@ -10,6 +10,8 @@ interface DesignContextState {
   activeLayerId: string | null;
   scale: number;
   isSymmetryEnabled: boolean;
+ cursorMode: 'add' | 'move';
+  setCursorMode: React.Dispatch<React.SetStateAction<'add' | 'move'>>;
   measurement: Measurement | null;
   gridUnit: GridUnit;
   setGridUnit: (unit: GridUnit) => void;
@@ -40,7 +42,7 @@ const initialLayer: Layer = {
   points: [],
   strokeWidth: 1,
   pointRadius: 3,
-  color: '#000000',
+  color: '#FFEFD5',
 };
 
 export function DesignProvider({ children }: { children: React.ReactNode }) {
@@ -49,6 +51,7 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
   const [scale, setScale] = useState(1);
   const [isSymmetryEnabled, setIsSymmetryEnabled] = useState(false);
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
+  const [cursorMode, setCursorMode] = useState<'add' | 'move'>('add');
   const [gridUnit, setGridUnit] = useState<GridUnit>('inch');
 
   const toggleSymmetry = useCallback(() => setIsSymmetryEnabled(prev => !prev), []);
@@ -90,7 +93,7 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
       points: [],
       strokeWidth: 1,
       pointRadius: 3,
-      color: '#000000',
+ color: '#FFEFD5',
     };
     setLayers(prev => [...prev, newLayer]);
     setActiveLayerId(newLayer.id);
@@ -263,6 +266,8 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
         zoomIn,
         zoomOut,
         setScale,
+        cursorMode,
+        setCursorMode,
         detachLine,
         getCanvasAsSvg,
         updateLayerBackgroundImage,

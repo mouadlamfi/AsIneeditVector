@@ -552,6 +552,8 @@ function StatusIndicator() {
       <span>Double Click: New Line</span>
       <Separator orientation="vertical" className="h-3" />
       <span>Right Click: Undo</span>
+      <Separator orientation="vertical" className="h-3" />
+      <span>Middle Click: New Line</span>
     </div>
   );
 }
@@ -566,7 +568,11 @@ export default function Home() {
           {/* Enhanced Header */}
           <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card/80 backdrop-blur-sm px-6 shadow-sm glass">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setMenusVisible(!menusVisible)}>
+              <div 
+                className="flex items-center gap-3 cursor-pointer" 
+                onClick={() => setMenusVisible(!menusVisible)}
+                data-ai-hint="Click to show/hide drawing tools"
+              >
                 <div className={`p-2 rounded-lg bg-primary/10 border border-primary/20 transition-transform duration-300 ${menusVisible ? '' : 'rotate-180'}`}>
                   <PenTool className="h-5 w-5 text-primary" />
                 </div>

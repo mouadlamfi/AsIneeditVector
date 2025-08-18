@@ -4,7 +4,7 @@
 import { useDesign } from '@/context/design-context';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Trash2, Undo2, Spline, Palette, Settings, Zap, Eye, EyeOff } from 'lucide-react';
+import { Trash2, Undo2, Spline, Palette, Settings, Zap, Eye, EyeOff, MousePointer2, PlusCircle } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { Slider } from './ui/slider';
 import { Label } from './ui/label';
@@ -55,7 +55,9 @@ export function DrawingToolbar() {
     toggleSymmetry, 
     removeLastPoint, 
     gridUnit, 
-    setGridUnit, 
+    setGridUnit,
+    cursorMode,
+    setCursorMode,
     detachLine 
   } = useDesign();
   
@@ -236,6 +238,17 @@ export function DrawingToolbar() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Mode Toggle Button */}
+      <Card className="card-enhanced">
+        <CardContent className="p-4">
+          <Button onClick={() => setCursorMode(cursorMode === 'add' ? 'move' : 'add')} className="w-full btn-animate">
+            {cursorMode === 'add' ? <MousePointer2 className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+            {cursorMode === 'add' ? 'Move Points' : 'Add Points'}
+          </Button>
+        </CardContent>
+      </Card>
+
 
       {/* Action Buttons */}
       <Card className="card-enhanced">

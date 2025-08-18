@@ -129,7 +129,7 @@ type TransformMode = 'move' | 'rotate' | 'resize' | null;
 type CanvasMode = 'draw' | 'pan';
 
 export function GarmentCanvas() {
-  const { layers, activeLayerId, addPoint, removeLastPoint, updatePoint, scale, setScale, zoomIn, zoomOut, detachLine, isSymmetryEnabled, measurement, setMeasurement, gridUnit, updateActiveLayer } = useDesign();
+  const { layers, activeLayerId, addPoint, removeLastPoint, updatePoint, scale, setScale, zoomIn, zoomOut, detachLine, isSymmetryEnabled, measurement, setMeasurement, gridUnit, updateActiveLayer, cursorMode } = useDesign();
   const mobileOpt = useMobileOptimization();
   const canvasRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -273,14 +273,20 @@ export function GarmentCanvas() {
   
   const handlePointMouseDown = (e: React.MouseEvent<SVGCircleElement>, index: number) => {
     e.stopPropagation();
-    if (canvasMode === 'draw') {
+    if (cursorMode === 'move') {
       setDraggingPointIndex(index);
       setMeasurement(null);
     }
   }
 
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
+    // Handle middle-click to detach line
+ if (e.button === 1) {
+      e.preventDefault();
+      detachLine();
+ return;
+    }
+    if (e.button !== 0) return; // Only proceed with left-click for other actions
     if (transformMode) return;
 
     if (canvasMode === 'pan') {
@@ -413,7 +419,7 @@ export function GarmentCanvas() {
     if (!activeLayer || activeLayer.isLocked) return;
     if (transformMode) return;
     if (draggingPointIndex !== null) return;
-    if (canvasMode !== 'draw') return;
+    if (cursorMode !== 'add') return;
 
     if (e.detail === 1) { // Single click
       addPoint(getRelativeCoords(e));
@@ -423,7 +429,7 @@ export function GarmentCanvas() {
   const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (!activeLayer || activeLayer.isLocked) return;
-    if (canvasMode !== 'draw') return;
+    if (cursorMode !== 'add') return;
     detachLine();
     setMeasurement(null);
   };
@@ -431,7 +437,7 @@ export function GarmentCanvas() {
   const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (!activeLayer || activeLayer.isLocked) return;
-    if (canvasMode !== 'draw') return;
+    if (cursorMode !== 'add') return;
 
     if (draggingPointIndex === null) {
       removeLastPoint();
@@ -518,7 +524,7 @@ export function GarmentCanvas() {
       const cx = mirror ? getMirroredX(p.x) : p.x;
       const cy = p.y;
       const radius = layer.pointRadius / scale;
-      const isDraggable = !mirror && canDrag && canvasMode === 'draw';
+      const isDraggable = !mirror && canDrag && cursorMode === 'move';
       const isActive = layer.id === activeLayerId;
       
       return (
@@ -591,7 +597,7 @@ export function GarmentCanvas() {
   };
   
   const renderPreview = () => {
-    if (!activeLayer || activeLayer.isLocked || draggingPointIndex !== null || !currentMousePosition || canvasMode !== 'draw') return null;
+    if (!activeLayer || activeLayer.isLocked || draggingPointIndex !== null || !currentMousePosition || cursorMode !== 'add') return null;
     const lastPoint = activeLayer.points[activeLayer.points.length - 1];
     if (!lastPoint || lastPoint.break) return null;
     
@@ -738,7 +744,8 @@ export function GarmentCanvas() {
       onMouseLeave={handleMouseLeave}
       className={cn(
         "w-full h-full relative overflow-hidden group canvas-enhanced",
-        !transformMode && canvasMode === 'draw' && "custom-cursor-thin",
+ !transformMode && cursorMode === 'add' && "cursor-crosshair",
+ !transformMode && cursorMode === 'move' && "cursor-move",
         canvasMode === 'pan' && "cursor-grab",
         isPanning && "cursor-grabbing"
        )}
