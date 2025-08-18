@@ -1,147 +1,19 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { DesignProvider } from '@/context/design-context';
 import { GarmentCanvas } from '@/components/garment-canvas';
 import { CollapsibleMenu } from '@/components/collapsible-menu';
-import { MeasurementDisplay } from '@/components/measurement-display';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Bug } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
-import { 
-  clearAllModalsAndOverlays, 
-  setupGlobalEscapeHandler, 
-  setupGlobalClickOutsideHandler,
-  debugClearModals 
-} from '@/lib/modal-cleanup';
+import { ExportMenu } from '@/components/export-menu';
 import { FlowerOfLifeLogo } from '@/components/flower-of-life-logo';
+import { MobilePerformanceMonitor, useMobilePerformance } from '@/components/mobile-performance-monitor';
+import { clearAllModalsAndOverlays, setupGlobalEscapeHandler, setupGlobalClickOutsideHandler, debugClearModals } from '@/lib/modal-cleanup';
 
-function ArtApp() {
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
-
-  // Global modal cleanup on app initialization
-  useEffect(() => {
-    try {
-      // Clear any existing modals on app load
-      clearAllModalsAndOverlays();
-      
-      // Setup global handlers
-      const cleanupEscape = setupGlobalEscapeHandler();
-      const cleanupClick = setupGlobalClickOutsideHandler();
-      
-      // Cleanup on unmount
-      return () => {
-        try {
-          cleanupEscape();
-          cleanupClick();
-        } catch (error) {
-          console.error('Error during cleanup:', error);
-        }
-      };
-    } catch (error) {
-      console.error('Error initializing app:', error);
-    }
-  }, []);
-
-  const toggleMenu = () => {
-    try {
-      // Clear any existing modals before opening menu
-      clearAllModalsAndOverlays();
-      setIsMenuVisible(!isMenuVisible);
-    } catch (error) {
-      console.error('Error toggling menu:', error);
-    }
-  };
-
-  return (
-    <div className="h-screen w-screen bg-black overflow-hidden">
-      {/* Flower of Life Logo Menu Button */}
-      <div className="fixed top-4 left-4 z-[9999]">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div
-              className={cn(
-                "h-16 w-16 bg-background/90 backdrop-blur-sm border border-border shadow-lg",
-                "hover:bg-background/95 transition-all duration-300",
-                "rounded-full flex items-center justify-center",
-                "hover:shadow-xl hover:shadow-gold/20"
-              )}
-              style={{ pointerEvents: 'auto' }}
-            >
-              <FlowerOfLifeLogo
-                onClick={toggleMenu}
-                size={48}
-                animated={true}
-                className="flower-logo-button"
-              />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{isMenuVisible ? 'Hide Drawing Tools' : 'Show Drawing Tools'}</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
-
-      {/* Debug Button - Temporary for testing */}
-      <div className="fixed top-4 right-4 z-[9999]">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={debugClearModals}
-              className={cn(
-                "h-12 w-12 bg-red-500/90 backdrop-blur-sm border border-red-600 shadow-lg",
-                "hover:bg-red-600/95 transition-all duration-200",
-                "rounded-full"
-              )}
-              style={{ pointerEvents: 'auto' }}
-            >
-              <Bug className="h-5 w-5 text-white" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Clear Stuck Modals (Debug)</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
-
-      {/* Measurement Display */}
-      <MeasurementDisplay />
-
-      {/* Collapsible Menu */}
-      <CollapsibleMenu 
-        isVisible={isMenuVisible} 
-        onClose={() => setIsMenuVisible(false)} 
-      />
-
-      {/* Full-Screen Canvas */}
-      <div className="h-full w-full">
-        <GarmentCanvas />
-      </div>
-    </div>
-  );
-}
-
-export default function HomePage() {
-  return (
-    <TooltipProvider>
-      <DesignProvider>
-        <ErrorBoundary>
-          <ArtApp />
-        </ErrorBoundary>
-      </DesignProvider>
-    </TooltipProvider>
-  );
-}
-
-// Error boundary component
+// Error Boundary Component
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error) {
@@ -149,21 +21,21 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('App error caught by boundary:', error, errorInfo);
+    console.error('Error caught by boundary:', error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="h-screen w-screen bg-black text-white flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
-            <p className="text-gray-400 mb-4">The app encountered an error and needs to reload.</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-white text-black rounded hover:bg-gray-200"
+        <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+          <div className="text-center space-y-4">
+            <h1 className="text-2xl font-bold">Something went wrong</h1>
+            <p className="text-gray-400">The app encountered an error. Please refresh the page.</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-white text-black rounded hover:bg-gray-200 transition-colors"
             >
-              Reload App
+              Refresh Page
             </button>
           </div>
         </div>
@@ -172,4 +44,108 @@ class ErrorBoundary extends React.Component {
 
     return this.props.children;
   }
+}
+
+// Main App Component with Performance Monitoring
+function AsINeedItArt() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const { performanceData, updatePerformance } = useMobilePerformance();
+
+  // Global modal cleanup on app initialization
+  useEffect(() => {
+    // Clear any existing modals/overlays
+    clearAllModalsAndOverlays();
+    
+    // Setup global event handlers
+    setupGlobalEscapeHandler();
+    setupGlobalClickOutsideHandler();
+    
+    // Cleanup on unmount
+    return () => {
+      clearAllModalsAndOverlays();
+    };
+  }, []);
+
+  // Handle performance updates
+  const handlePerformanceUpdate = (data) => {
+    updatePerformance(data);
+    
+    // Apply mobile-specific optimizations based on performance data
+    if (data.isMobile && data.activeStrategies.length > 0) {
+      console.log('Mobile performance optimizations active:', data.activeStrategies);
+    }
+  };
+
+  return (
+    <div className="h-screen w-screen bg-black overflow-hidden relative">
+      {/* Mobile Performance Monitor */}
+      <MobilePerformanceMonitor onPerformanceUpdate={handlePerformanceUpdate}>
+        {/* Main Canvas */}
+        <div className="absolute inset-0">
+          <GarmentCanvas />
+        </div>
+
+        {/* Menu Button - Flower of Life Logo */}
+        <div className="absolute top-4 left-4 z-[9999]">
+          <FlowerOfLifeLogo 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            isActive={isMenuOpen}
+          />
+        </div>
+
+        {/* Collapsible Menu */}
+        {isMenuOpen && (
+          <CollapsibleMenu 
+            onClose={() => setIsMenuOpen(false)}
+            onExportClick={() => {
+              setIsMenuOpen(false);
+              setIsExportOpen(true);
+            }}
+          />
+        )}
+
+        {/* Export Menu */}
+        {isExportOpen && (
+          <ExportMenu 
+            onClose={() => setIsExportOpen(false)}
+          />
+        )}
+
+        {/* Debug Button (temporary) */}
+        {process.env.NODE_ENV === 'development' && (
+          <button
+            onClick={debugClearModals}
+            className="fixed bottom-4 right-4 z-[10000] bg-red-500 text-white px-3 py-2 rounded text-xs"
+          >
+            Debug: Clear Modals
+          </button>
+        )}
+
+        {/* Performance Status (development only) */}
+        {process.env.NODE_ENV === 'development' && performanceData && (
+          <div className="fixed bottom-4 left-4 z-[10000] bg-black/80 text-white px-3 py-2 rounded text-xs font-mono">
+            <div>FPS: {performanceData.fps}</div>
+            <div>Memory: {performanceData.memory}MB</div>
+            <div>Battery: {Math.round(performanceData.battery * 100)}%</div>
+            <div>Mobile: {performanceData.isMobile ? 'Yes' : 'No'}</div>
+            {performanceData.activeStrategies.length > 0 && (
+              <div>Strategies: {performanceData.activeStrategies.join(', ')}</div>
+            )}
+          </div>
+        )}
+      </MobilePerformanceMonitor>
+    </div>
+  );
+}
+
+// Root App Component
+export default function HomePage() {
+  return (
+    <ErrorBoundary>
+      <DesignProvider>
+        <AsINeedItArt />
+      </DesignProvider>
+    </ErrorBoundary>
+  );
 }

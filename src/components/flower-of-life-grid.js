@@ -7,10 +7,21 @@ const GRID_UNITS_IN_PIXELS = {
   cm: 37.795,
 };
 
-// Flower of Life Geometry Math
+// Mobile-first performance constants
+const MOBILE_PERFORMANCE = {
+  MAX_MOTIFS: 25, // Reduced from desktop
+  MAX_CIRCLES: 150, // Reduced circle count
+  MAX_INTERSECTIONS: 100, // Reduced intersection points
+  RENDER_DISTANCE: 200, // Smaller render area
+  MIN_MOTIF_SPACING: 2, // Larger spacing for performance
+};
+
+// Flower of Life Geometry Math - Mobile optimized
 class FlowerOfLifeGeometry {
-  constructor(unit, scale) {
+  constructor(unit, scale, isMobile = false) {
     this.unit = unit;
+    this.isMobile = isMobile;
+    
     // Calculate radius based on unit mode
     if (unit === 'cm') {
       // In cm mode: R = 1 cm
@@ -19,6 +30,11 @@ class FlowerOfLifeGeometry {
       // In inch mode: R = 1 inch × π
       this.radius = (GRID_UNITS_IN_PIXELS.inch * Math.PI) / scale;
     }
+    
+    // Mobile: Increase spacing for performance
+    if (isMobile) {
+      this.radius *= MOBILE_PERFORMANCE.MIN_MOTIF_SPACING;
+    }
   }
 
   // Get the base radius
@@ -26,7 +42,7 @@ class FlowerOfLifeGeometry {
     return this.radius;
   }
 
-  // Calculate the centers of all Flower of Life motifs in a grid with performance optimization
+  // Calculate the centers of all Flower of Life motifs in a grid with mobile-first optimization
   getMotifCenters(viewportBounds) {
     const centers = [];
     
@@ -34,16 +50,20 @@ class FlowerOfLifeGeometry {
     const horizontalSpacing = this.radius * 2;
     const verticalSpacing = this.radius * Math.sqrt(3);
 
-    // Calculate the range of visible motifs with padding
-    const padding = this.radius * 2; // Add padding to prevent edge artifacts
+    // Calculate the range of visible motifs with mobile-optimized padding
+    const padding = this.isMobile ? 
+      this.radius * 1.5 : // Smaller padding for mobile
+      this.radius * 2; // Desktop padding
+    
     const startX = Math.floor((viewportBounds.minX - padding) / horizontalSpacing) * horizontalSpacing;
     const endX = Math.ceil((viewportBounds.maxX + padding) / horizontalSpacing) * horizontalSpacing;
     const startY = Math.floor((viewportBounds.minY - padding) / verticalSpacing) * verticalSpacing;
     const endY = Math.ceil((viewportBounds.maxY + padding) / verticalSpacing) * verticalSpacing;
 
-    // Optimized performance limit based on viewport size
-    const viewportArea = (viewportBounds.maxX - viewportBounds.minX) * (viewportBounds.maxY - viewportBounds.minY);
-    const maxMotifs = Math.min(400, Math.max(100, Math.floor(viewportArea / 20000))); // More conservative limit
+    // Mobile-first performance limit
+    const maxMotifs = this.isMobile ? 
+      MOBILE_PERFORMANCE.MAX_MOTIFS : 
+      Math.min(400, Math.max(100, Math.floor((viewportBounds.maxX - viewportBounds.minX) * (viewportBounds.maxY - viewportBounds.minY) / 20000)));
     
     let motifCount = 0;
 
@@ -59,14 +79,14 @@ class FlowerOfLifeGeometry {
     return centers;
   }
 
-  // Generate all circles for a single Flower of Life motif
+  // Generate all circles for a single Flower of Life motif - Mobile optimized
   getMotifCircles(centerX, centerY) {
     const circles = [];
     
     // Central circle
     circles.push({ cx: centerX, cy: centerY, r: this.radius });
     
-    // Six surrounding circles (petals)
+    // Six surrounding circles (petals) - Mobile: reduced complexity
     for (let i = 0; i < 6; i++) {
       const angle = (i * 60) * Math.PI / 180;
       const petalX = centerX + this.radius * Math.cos(angle);
@@ -77,7 +97,7 @@ class FlowerOfLifeGeometry {
     return circles;
   }
 
-  // Calculate all intersection points between circles
+  // Calculate all intersection points between circles - Mobile optimized
   getIntersectionPoints(centerX, centerY) {
     const intersections = [];
     
@@ -92,12 +112,17 @@ class FlowerOfLifeGeometry {
     return intersections;
   }
 
-  // Get all intersection points for the entire grid
+  // Get all intersection points for the entire grid - Mobile optimized
   getAllIntersectionPoints(viewportBounds) {
     const allIntersections = [];
     const motifCenters = this.getMotifCenters(viewportBounds);
     
-    motifCenters.forEach(center => {
+    // Mobile: Limit intersection calculations
+    const maxMotifs = this.isMobile ? 
+      Math.min(motifCenters.length, 10) : 
+      motifCenters.length;
+    
+    motifCenters.slice(0, maxMotifs).forEach(center => {
       const intersections = this.getIntersectionPoints(center.x, center.y);
       allIntersections.push(...intersections);
     });
@@ -206,18 +231,21 @@ export function getFlowerOfLifeGuides(point, unit, scale) {
 }
 
 export const FlowerOfLifeGrid = React.memo(({
-  scale, unit, offsetX, offsetY, viewportBounds
+  scale, unit, offsetX, offsetY, viewportBounds, isMobile = false
 }) => {
-  const geometry = useMemo(() => new FlowerOfLifeGeometry(unit, scale), [unit, scale]);
+  const geometry = useMemo(() => new FlowerOfLifeGeometry(unit, scale, isMobile), [unit, scale, isMobile]);
   
   const gridElements = useMemo(() => {
     const elements = [];
     const motifCenters = geometry.getMotifCenters(viewportBounds);
-    const maxElements = 1000; // Reduced limit for better performance
+    
+    // Mobile-first performance limits
+    const maxElements = isMobile ? MOBILE_PERFORMANCE.MAX_CIRCLES : 1000;
+    const maxMotifs = isMobile ? MOBILE_PERFORMANCE.MAX_MOTIFS : 400;
     let elementCount = 0;
 
-    // Render Flower of Life motifs
-    motifCenters.forEach(center => {
+    // Render Flower of Life motifs - Mobile optimized
+    motifCenters.slice(0, maxMotifs).forEach(center => {
       if (elementCount >= maxElements) return;
       
       const circles = geometry.getMotifCircles(center.x, center.y);
@@ -231,8 +259,8 @@ export const FlowerOfLifeGrid = React.memo(({
             cy={circle.cy}
             r={circle.r}
             fill="none"
-            stroke="rgba(255, 255, 255, 0.1)"
-            strokeWidth="0.5"
+            stroke={isMobile ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.1)"} // Reduced opacity for mobile
+            strokeWidth={isMobile ? "0.3" : "0.5"} // Thinner strokes for mobile
             className="flower-of-life-circle"
           />
         );
@@ -240,9 +268,11 @@ export const FlowerOfLifeGrid = React.memo(({
       });
     });
 
-    // Render intersection points
+    // Render intersection points - Mobile optimized
     const intersections = geometry.getAllIntersectionPoints(viewportBounds);
-    const maxIntersections = Math.min(intersections.length, 250); // Reduced limit for better performance
+    const maxIntersections = isMobile ? 
+      Math.min(intersections.length, MOBILE_PERFORMANCE.MAX_INTERSECTIONS) : 
+      Math.min(intersections.length, 250);
     
     intersections.slice(0, maxIntersections).forEach((point, index) => {
       if (elementCount >= maxElements) return;
@@ -252,8 +282,8 @@ export const FlowerOfLifeGrid = React.memo(({
           key={`intersection-${index}`}
           cx={point.x}
           cy={point.y}
-          r="1"
-          fill="rgba(255, 255, 255, 0.3)"
+          r={isMobile ? "0.5" : "1"} // Smaller points for mobile
+          fill={isMobile ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.3)"} // Reduced opacity for mobile
           className="flower-of-life-point"
         />
       );
@@ -261,7 +291,7 @@ export const FlowerOfLifeGrid = React.memo(({
     });
 
     return elements;
-  }, [geometry, viewportBounds, scale]);
+  }, [geometry, viewportBounds, scale, isMobile]);
 
   return (
     <g className="flower-of-life-grid">
