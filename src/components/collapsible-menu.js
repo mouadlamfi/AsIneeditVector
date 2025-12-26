@@ -106,21 +106,21 @@ export function CollapsibleMenu({ isVisible, onClose }) {
   return (
     <div
       className={cn(
-        "fixed top-0 left-0 h-full z-[9998] transition-transform duration-300 ease-in-out",
+        "fixed top-0 left-0 h-full z-[9999] transition-transform duration-300 ease-in-out",
         isVisible ? "translate-x-0" : "-translate-x-full"
       )}
     >
-      {/* Backdrop */}
+      {/* Backdrop - positioned to right of menu, only covers canvas */}
       {isVisible && (
         <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[9997]"
+          className="fixed top-0 left-80 right-0 bottom-0 bg-black/20 z-[9998]"
           onClick={onClose}
           style={{ pointerEvents: 'auto' }}
         />
       )}
       
       {/* Menu Panel */}
-      <div className="relative h-full w-80 bg-background/95 backdrop-blur-md border-r border-border shadow-2xl" style={{ pointerEvents: 'auto' }}>
+      <div className="relative h-full w-80 bg-background/95 border-r border-border shadow-2xl overflow-hidden" style={{ pointerEvents: 'auto', zIndex: 10000 }}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-semibold">Drawing Tools</h2>

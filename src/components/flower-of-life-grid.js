@@ -244,6 +244,14 @@ export const FlowerOfLifeGrid = React.memo(({
     const maxMotifs = isMobile ? MOBILE_PERFORMANCE.MAX_MOTIFS : 400;
     let elementCount = 0;
 
+    // Helper: normalize numeric attributes to fixed precision to avoid
+    // server/client floating-point formatting differences during hydration.
+    const fmt = (v) => {
+      if (typeof v !== 'number') return v;
+      // 4 decimal places is enough for rendering while keeping values stable
+      return Number(v.toFixed(4));
+    };
+
     // Render Flower of Life motifs - Mobile optimized
     motifCenters.slice(0, maxMotifs).forEach(center => {
       if (elementCount >= maxElements) return;
@@ -251,13 +259,12 @@ export const FlowerOfLifeGrid = React.memo(({
       const circles = geometry.getMotifCircles(center.x, center.y);
       circles.forEach(circle => {
         if (elementCount >= maxElements) return;
-        
         elements.push(
           <circle
-            key={`circle-${center.x}-${center.y}-${circle.cx}-${circle.cy}`}
-            cx={circle.cx}
-            cy={circle.cy}
-            r={circle.r}
+            key={`circle-${fmt(center.x)}-${fmt(center.y)}-${fmt(circle.cx)}-${fmt(circle.cy)}`}
+            cx={fmt(circle.cx)}
+            cy={fmt(circle.cy)}
+            r={fmt(circle.r)}
             fill="none"
             stroke={isMobile ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.1)"} // Reduced opacity for mobile
             strokeWidth={isMobile ? "0.3" : "0.5"} // Thinner strokes for mobile
@@ -276,12 +283,12 @@ export const FlowerOfLifeGrid = React.memo(({
     
     intersections.slice(0, maxIntersections).forEach((point, index) => {
       if (elementCount >= maxElements) return;
-      
+
       elements.push(
         <circle
-          key={`intersection-${index}`}
-          cx={point.x}
-          cy={point.y}
+          key={`intersection-${fmt(point.x)}-${fmt(point.y)}-${index}`}
+          cx={fmt(point.x)}
+          cy={fmt(point.y)}
           r={isMobile ? "0.5" : "1"} // Smaller points for mobile
           fill={isMobile ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.3)"} // Reduced opacity for mobile
           className="flower-of-life-point"

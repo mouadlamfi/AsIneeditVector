@@ -336,10 +336,13 @@ export function GarmentCanvas() {
           id="design-canvas-svg" 
           ref={svgRef} 
           className="w-full h-full absolute top-0 left-0" 
+          viewBox="0 0 1200 800"
+          preserveAspectRatio="xMidYMid meet"
           style={{ 
             minWidth: isMobile ? '400px' : '1200px',
             minHeight: isMobile ? '600px' : '800px',
-            pointerEvents: 'none'
+            pointerEvents: 'auto',
+            backgroundColor: '#000000'
           }}
         >
           {/* Flower of Life Grid - Mobile optimized */}

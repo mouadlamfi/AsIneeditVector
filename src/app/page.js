@@ -97,6 +97,7 @@ function AsINeedItArt() {
         {/* Collapsible Menu */}
         {isMenuOpen && (
           <CollapsibleMenu 
+            isVisible={isMenuOpen}
             onClose={() => setIsMenuOpen(false)}
             onExportClick={() => {
               setIsMenuOpen(false);
